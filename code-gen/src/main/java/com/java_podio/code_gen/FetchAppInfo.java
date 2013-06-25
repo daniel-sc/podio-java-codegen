@@ -31,11 +31,11 @@ public class FetchAppInfo {
 	public Application fetch() {
 		Application app = appAPI.getApp(appId);
 		
-		//DEBUG:
-		for(ApplicationField field : app.getFields()) {
-			ApplicationField f = appAPI.getField(appId, field.getId());
-			CodeGenerator.printAppField(f);
-		}
+//		//DEBUG:
+//		for(ApplicationField field : app.getFields()) {
+//			ApplicationField f = appAPI.getField(appId, field.getId());
+//			CodeGenerator.printAppField(f);
+//		}
 		return app;
 	}
 
