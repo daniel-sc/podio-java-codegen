@@ -12,6 +12,7 @@
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
+					<forkMode>false</forkMode>
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
