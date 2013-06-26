@@ -58,6 +58,8 @@ public class CodeGenerator {
 
 	private JVar itemCreateFieldValues;
 
+	JDefinedClass currencyClass;
+
 	public CodeGenerator() {
 		jCodeModel = new JCodeModel();
 	}
@@ -71,8 +73,8 @@ public class CodeGenerator {
 	// TODO move fromItem from constructor to method
 
 	// TODO Add link to elment?
-	
-	//TODO id, externalId, revision, ... to getItemCreate 
+
+	// TODO id, externalId, revision, ... to getItemCreate
 
 	public void generateCode(Application app) {
 		printApp(app);
@@ -80,6 +82,8 @@ public class CodeGenerator {
 		JPackage jp = jCodeModel._package("com.podio.generated");
 
 		try {
+
+			currencyClass = new CurrencyGenerator(jCodeModel, jp).generateCurrencyClass();
 
 			String className = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, app.getConfiguration().getName().toLowerCase());
 			JDefinedClass jc = jp._class(className);
@@ -123,8 +127,8 @@ public class CodeGenerator {
 			constructorFromItem.body().invoke(setValuesFromItem).arg(constructorFromItemParam);
 
 			// add internal podio id and revision:
-			JMember podioId = addMember(jc, "PodioId", Integer.class, "This represents the internal Podio id of the item.");
-			JMember podioRevision = addMember(jc, "PodioRevision", Integer.class, "This represents the internal Podio revision of the item.");
+			JMember podioId = addMember(jc, "PodioId", Integer.class, "This represents the internal Podio id of the item.", jCodeModel);
+			JMember podioRevision = addMember(jc, "PodioRevision", Integer.class, "This represents the internal Podio revision of the item.", jCodeModel);
 			setValuesFromItem.body().assign(podioId.getField(), setValuesFromItemParam.invoke("getId"));
 			setValuesFromItem.body().assign(podioRevision.getField(), setValuesFromItemParam.invoke("getCurrentRevision").invoke("getRevision"));
 
@@ -136,7 +140,7 @@ public class CodeGenerator {
 				if (type.equals(PodioType.UNDEFINED)) {
 					javadoc = javadoc == null ? FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC : javadoc + "\n" + FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC;
 				}
-				JMember field = addMember(jc, name, type.getJavaType(), javadoc);
+				JMember field = addMember(jc, name, type.getJavaType(), javadoc, jCodeModel);
 
 				// add setValuesFromItem part:
 				JCase jcase = setValuesFromItemSwitch._case(JExpr.lit(f.getId()));
@@ -164,6 +168,8 @@ public class CodeGenerator {
 	}
 
 	/**
+	 * JavaType -> Item
+	 * 
 	 * @param getter
 	 * @param type
 	 *            (return-)type of {@code getter}
@@ -177,7 +183,7 @@ public class CodeGenerator {
 			case NUMBER:
 				return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value").arg(JExpr.invoke(getter));
 			case MONEY:
-				//TODO
+				return currencyClass.staticInvoke("getFieldValuesUpdate").arg(JExpr.invoke(getter).arg(externalid));
 			default:
 				break;
 		}
@@ -185,6 +191,8 @@ public class CodeGenerator {
 	}
 
 	/**
+	 * Item -> JavaType
+	 * 
 	 * @param type
 	 * @param jVar
 	 *            is expected to be of type {@link FieldValuesView}
@@ -195,8 +203,9 @@ public class CodeGenerator {
 			case TEXT:
 				return createGetStringFieldValue(jVar, "value");
 			case NUMBER:
-			case MONEY:
 				return createGetDoubleFieldValue(jVar);
+			case MONEY:
+				return createGetCurrencyFieldValue(jVar);
 			case DATE:
 				return createGetDateFieldValue(jVar);
 			case APP:
@@ -207,6 +216,15 @@ public class CodeGenerator {
 				System.out.println("WARNING: could not create getFieldValueExpression for type: " + type);
 				return JExpr._null();
 		}
+	}
+
+	/**
+	 * @param jVar
+	 *            needs to be of type {@link FieldValuesView}.
+	 * @return
+	 */
+	private JExpression createGetCurrencyFieldValue(JVar jVar) {
+		return JExpr._new(currencyClass).arg(createGetDoubleFieldValue(jVar)).arg(createGetStringFieldValue(jVar, "currency"));
 	}
 
 	private JExpression createGetDateFieldValue(JVar jVar) {
@@ -245,10 +263,11 @@ public class CodeGenerator {
 	 * @param type
 	 * @param javadoc
 	 *            is added to variable, setter and getter. Might be {@code null} .
+	 * @param jCodeModel
 	 * @return a reference to the field and its getter and setter
 	 * @see CaseFormat#UPPER_CAMEL
 	 */
-	private JMember addMember(JDefinedClass jc, String name, Class<? extends Object> type, String javadoc) {
+	public static JMember addMember(JDefinedClass jc, String name, Class<? extends Object> type, String javadoc, JCodeModel jCodeModel) {
 		String nameLowerCamelCase = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name);
 
 		// add member:
