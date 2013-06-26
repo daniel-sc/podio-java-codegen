@@ -4,12 +4,17 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.common.base.CaseFormat;
 import com.podio.app.Application;
 import com.podio.app.ApplicationField;
+import com.podio.item.FieldValuesUpdate;
 import com.podio.item.FieldValuesView;
 import com.podio.item.Item;
+import com.podio.item.ItemCreate;
+import com.podio.item.ItemUpdate;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JCase;
 import com.sun.codemodel.JClassAlreadyExistsException;
@@ -30,16 +35,31 @@ public class CodeGenerator {
 
 	private static final String FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC = "Field is of unsupportet type and is not parsed, hence always {@code null}!";
 
-	JCodeModel jCodeModel;
+	final JCodeModel jCodeModel;
 
 	JFieldVar podioDateFormatter;
 
 	/**
 	 * Constructor - constructing an object from an {@link Item}.
 	 */
-	JMethod itemConstructor;
+	JMethod constructorFromItem;
+
+	/**
+	 * Sets values from a given {@link Item}.
+	 */
+	JMethod setValuesFromItem;
+
+	/**
+	 * Constructs a {@link ItemCreate} from current instance. As {@link ItemCreate} inherits from {@link ItemUpdate}, the result can be used for updates as well.
+	 */
+	JMethod getItemCreate;
+
+	private JVar itemCreateResult;
+
+	private JVar itemCreateFieldValues;
 
 	public CodeGenerator() {
+		jCodeModel = new JCodeModel();
 	}
 
 	// TODO add Enum for categorys
@@ -55,7 +75,6 @@ public class CodeGenerator {
 	public void generateCode(Application app) {
 		printApp(app);
 
-		jCodeModel = new JCodeModel();
 		JPackage jp = jCodeModel._package("com.podio.generated");
 
 		try {
@@ -79,21 +98,33 @@ public class CodeGenerator {
 
 			// TODO add field ids (id/externalId)?
 
+			// setValuesFromItem method (needs to be defined before itemConstructor?!):
+			setValuesFromItem = jc.method(JMod.PUBLIC, jCodeModel.VOID, "fillFromItem");
+			JVar setValuesFromItemParam = setValuesFromItem.param(Item.class, CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, className) + "Item");
+			JForEach setValuesFromItemForEachField = setValuesFromItem.body().forEach(jCodeModel.ref(FieldValuesView.class), "field", setValuesFromItemParam.invoke("getFields"));
+			JSwitch setValuesFromItemSwitch = setValuesFromItemForEachField.body()._switch(setValuesFromItemForEachField.var().invoke("getId"));
+			setValuesFromItemSwitch._default().body().directStatement("System.out.println(\"ERROR: unexpected field id=\"+field.getId() (App: \"+this.getClass().getName()+\"");
+			setValuesFromItemSwitch._default().body()._break();
+
+			// getItemCreate method:
+			getItemCreate = jc.method(JMod.PUBLIC, jCodeModel._ref(ItemCreate.class), "fillFromItem");
+			getItemCreate.javadoc().add("As {@link ItemCreate} inherits from {@link ItemUpdate} this method can be used to generate updates!");
+			itemCreateResult = getItemCreate.body().decl(jCodeModel.ref(ItemCreate.class), "result", JExpr._new(jCodeModel.ref(ItemCreate.class)));
+			itemCreateFieldValues = getItemCreate.body().decl(jCodeModel.ref(List.class).narrow(FieldValuesUpdate.class), "fieldValuesList", JExpr._new(jCodeModel.ref(ArrayList.class).narrow(FieldValuesUpdate.class)));
+
 			// Default constructor:
 			jc.constructor(JMod.PUBLIC);
 
-			itemConstructor = jc.constructor(JMod.PUBLIC);
-			JVar itemConstructorParam = itemConstructor.param(Item.class, CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, className) + "Item");
-			JForEach constructorForEachField = itemConstructor.body().forEach(jCodeModel.ref(FieldValuesView.class), "field", itemConstructorParam.invoke("getFields"));
-			JSwitch constructorSwitch = constructorForEachField.body()._switch(constructorForEachField.var().invoke("getId"));
-			constructorSwitch._default().body().directStatement("System.out.println(\"ERROR: unexpected field id=\"+field.getId() (App: \"+this.getClass().getName()+\"");
-			constructorSwitch._default().body()._break();
+			// itemConstructor:
+			constructorFromItem = jc.constructor(JMod.PUBLIC);
+			JVar constructorFromItemParam = constructorFromItem.param(Item.class, CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, className) + "Item");
+			constructorFromItem.body().invoke(setValuesFromItem).arg(constructorFromItemParam);
 
 			// add internal podio id and revision:
-			JFieldVar podioId = addMember(jc, "PodioId", Integer.class, "This represents the internal Podio id of the item.");
-			JFieldVar podioRevision = addMember(jc, "PodioRevision", Integer.class, "This represents the internal Podio revision of the item.");
-			itemConstructor.body().assign(podioId, itemConstructorParam.invoke("getId"));
-			itemConstructor.body().assign(podioRevision, itemConstructorParam.invoke("getCurrentRevision").invoke("getRevision"));
+			JMember podioId = addMember(jc, "PodioId", Integer.class, "This represents the internal Podio id of the item.");
+			JMember podioRevision = addMember(jc, "PodioRevision", Integer.class, "This represents the internal Podio revision of the item.");
+			setValuesFromItem.body().assign(podioId.getField(), setValuesFromItemParam.invoke("getId"));
+			setValuesFromItem.body().assign(podioRevision.getField(), setValuesFromItemParam.invoke("getCurrentRevision").invoke("getRevision"));
 
 			for (ApplicationField f : app.getFields()) {
 				String name = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, f.getExternalId().toLowerCase());
@@ -103,16 +134,22 @@ public class CodeGenerator {
 				if (type.equals(PodioType.UNDEFINED)) {
 					javadoc = javadoc == null ? FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC : javadoc + "\n" + FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC;
 				}
-				addMember(jc, name, type.getJavaType(), javadoc);
+				JMember field = addMember(jc, name, type.getJavaType(), javadoc);
 
-				// add constructor part:
-				JCase jcase = constructorSwitch._case(JExpr.lit(f.getId()));
-				jcase.body().invoke("set" + name).arg(createGetFieldValue(type, constructorForEachField.var()));
+				// add setValuesFromItem part:
+				JCase jcase = setValuesFromItemSwitch._case(JExpr.lit(f.getId()));
+				jcase.body().invoke("set" + name).arg(createGetFieldValue(type, setValuesFromItemForEachField.var()));
 				jcase.body()._break();
 
-				// TODO add convertToUpdateItem part
-				// TODO add convertToCreateItem part
+				// add getItemCreate part:
+				JExpression fieldValueUpdate = createFieldValuesUpdate(field.getGetter(), type, f);
+				if (fieldValueUpdate != null) {
+					getItemCreate.body().add(itemCreateFieldValues.invoke("add").arg(fieldValueUpdate));
+				}
 			}
+
+			getItemCreate.body().add(itemCreateResult.invoke("setFields").arg(itemCreateFieldValues));
+			getItemCreate.body()._return(itemCreateResult);
 
 			jCodeModel.build(new File("."));
 
@@ -122,6 +159,25 @@ public class CodeGenerator {
 			e.printStackTrace();
 		}
 
+	}
+
+	/**
+	 * @param getter
+	 * @param type
+	 *            (return-)type of {@code getter}
+	 * @param f
+	 *            corresponds to (field of) {@code getter}
+	 * @return an {@link JExpression} that evaluates to a {@link FieldValuesUpdate} containing the return value of {@code getter}. If the field type is not supported, returns {@code null}.
+	 */
+	private JExpression createFieldValuesUpdate(JMethod getter, PodioType type, ApplicationField f) {
+		switch (type) {
+			case TEXT:
+				return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value").arg(JExpr.invoke(getter));
+
+			default:
+				break;
+		}
+		return null;
 	}
 
 	/**
@@ -144,13 +200,14 @@ public class CodeGenerator {
 			case CATEGORY:
 				// TODO: (Integer) ((Map<String, ?>) field.getValues().get(0).get("value")).get("id")
 			default:
-				System.out.println("ERROR: could not create getFieldValueExpression for type: " + type);
+				System.out.println("WARNING: could not create getFieldValueExpression for type: " + type);
 				return JExpr._null();
 		}
 	}
 
 	private JExpression createGetDateFieldValue(JVar jVar) {
-		itemConstructor._throws(ParseException.class);
+		setValuesFromItem._throws(ParseException.class);
+		constructorFromItem._throws(ParseException.class);
 		JExpression exp = createGetStringFieldValue(jVar, "start_date");
 		// 2011-12-31 11:27:10
 		return podioDateFormatter.invoke("parse").arg(exp);
@@ -184,10 +241,10 @@ public class CodeGenerator {
 	 * @param type
 	 * @param javadoc
 	 *            is added to variable, setter and getter. Might be {@code null} .
-	 * @return a reference to the field
+	 * @return a reference to the field and its getter and setter
 	 * @see CaseFormat#UPPER_CAMEL
 	 */
-	private JFieldVar addMember(JDefinedClass jc, String name, Class<? extends Object> type, String javadoc) {
+	private JMember addMember(JDefinedClass jc, String name, Class<? extends Object> type, String javadoc) {
 		String nameLowerCamelCase = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name);
 
 		// add member:
@@ -210,7 +267,51 @@ public class CodeGenerator {
 			setter.javadoc().add(javadoc);
 		}
 
-		return var;
+		return new JMember(var, getter, setter);
+	}
+
+	/**
+	 * Represents a field variable including its getter and setter method.
+	 */
+	private class JMember {
+
+		private JFieldVar field;
+
+		private JMethod getter;
+
+		private JMethod setter;
+
+		public JMember(JFieldVar field, JMethod getter, JMethod setter) {
+			super();
+			this.field = field;
+			this.getter = getter;
+			this.setter = setter;
+		}
+
+		public JFieldVar getField() {
+			return field;
+		}
+
+		public JMethod getGetter() {
+			return getter;
+		}
+
+		public JMethod getSetter() {
+			return setter;
+		}
+
+		public void setField(JFieldVar field) {
+			this.field = field;
+		}
+
+		public void setGetter(JMethod getter) {
+			this.getter = getter;
+		}
+
+		public void setSetter(JMethod setter) {
+			this.setter = setter;
+		}
+
 	}
 
 	public static void printApp(Application app) {
