@@ -33,6 +33,11 @@ public enum PodioType {
 		this.javaType = javaType;
 	}
 
+	/**
+	 * This needs to be mapped in some cases, such as {@link #MONEY}.
+	 * 
+	 * @return
+	 */
 	public Class<? extends Object> getJavaType() {
 		return javaType;
 	}
@@ -43,11 +48,11 @@ public enum PodioType {
 	public ApplicationFieldType getApplicationFieldType() {
 		return map.get(this);
 	}
-	
+
 	public static PodioType forApplicationFieldType(ApplicationFieldType type) {
 		map.containsValue(type);
 		for (PodioType podioType : map.keySet()) {
-			if(map.get(podioType).equals(type)) {
+			if (map.get(podioType).equals(type)) {
 				return podioType;
 			}
 		}
