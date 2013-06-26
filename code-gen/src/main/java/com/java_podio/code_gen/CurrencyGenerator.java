@@ -42,39 +42,55 @@ public class CurrencyGenerator {
 		JMember currency = CodeGenerator.addMember(result, "currency", jc.ref(Currency.class), null, jc);
 
 		JMember value = CodeGenerator.addMember(result, "value", jc.ref(Double.class), null, jc);
-		
-		JFieldVar currencyValueFormatter = result.field(JMod.PUBLIC, NumberFormat.class, "currencyValueFormatter", jc.ref(DecimalFormat.class).staticInvoke("getCurrencyInstance"));
+
+		JFieldVar currencyValueFormatter = result.field(JMod.PUBLIC, NumberFormat.class, "currencyValueFormatter", jc
+				.ref(DecimalFormat.class).staticInvoke("getCurrencyInstance"));
 
 		// Standard constructor:
 		JMethod defaultConstructor = result.constructor(JMod.PUBLIC);
-		defaultConstructor.body().assign(currency.getField(), jc.ref(Currency.class).staticInvoke("getInstance").arg(jc.ref(Locale.class).staticInvoke("getDefault")));
+		defaultConstructor.body()
+				.assign(currency.getField(),
+						jc.ref(Currency.class).staticInvoke("getInstance")
+								.arg(jc.ref(Locale.class).staticInvoke("getDefault")));
 		defaultConstructor.javadoc().add("Creates Currency using {@link java.util.Locale.getDefault()}.");
 
-		// value constructor:		
+		// value constructor:
 		JMethod valueConstructor = result.constructor(JMod.PUBLIC);
 		JVar valueParam1 = valueConstructor.param(Double.class, "value");
 		valueConstructor.body().assign(JExpr._this().ref(value.getField()), valueParam1);
-		valueConstructor.body().assign(currency.getField(), jc.ref(Currency.class).staticInvoke("getInstance").arg(jc.ref(Locale.class).staticInvoke("getDefault")));
+		valueConstructor.body()
+				.assign(currency.getField(),
+						jc.ref(Currency.class).staticInvoke("getInstance")
+								.arg(jc.ref(Locale.class).staticInvoke("getDefault")));
 		valueConstructor.javadoc().add("Creates Currency using {@link java.util.Locale.getDefault()}.");
 
 		// value+currency Constructor:
 		JMethod valueAndCurrencyConstructor = result.constructor(JMod.PUBLIC);
 		JVar valueParam = valueAndCurrencyConstructor.param(Double.class, "value");
 		JVar currencyParam = valueAndCurrencyConstructor.param(String.class, "currency");
-		valueAndCurrencyConstructor.javadoc().addParam("currency").add("Currency code as defined by ISO 4217 (e.g. \"EUR\" or \"USD\") - see {@link Currency#getInstance(String)}");
+		valueAndCurrencyConstructor
+				.javadoc()
+				.addParam("currency")
+				.add("Currency code as defined by ISO 4217 (e.g. \"EUR\" or \"USD\") - see {@link Currency#getInstance(String)}");
 		valueAndCurrencyConstructor.body().assign(JExpr._this().ref(value.getField()), valueParam);
-		valueAndCurrencyConstructor.body().assign(JExpr._this().ref(currency.getField()), jc.ref(Currency.class).staticInvoke("getInstance").arg(currencyParam));
-		
-		//getFieldValuesUpdate:
+		valueAndCurrencyConstructor.body().assign(JExpr._this().ref(currency.getField()),
+				jc.ref(Currency.class).staticInvoke("getInstance").arg(currencyParam));
+
+		// getFieldValuesUpdate:
 		JMethod getFieldValuesUpdate = result.method(JMod.PUBLIC, FieldValuesUpdate.class, "getFieldValuesUpdate");
 		JVar externalId = getFieldValuesUpdate.param(String.class, "externalId");
-		JVar valueMap = getFieldValuesUpdate.body().decl(jc.ref(HashMap.class).narrow(String.class, String.class), "valueMap", JExpr._new(jc.ref(HashMap.class).narrow(String.class, String.class)));
-		getFieldValuesUpdate.body().add(valueMap.invoke("put").arg("currency").arg(JExpr.invoke(currency.getGetter()).invoke("getCurrencyCode")));
-		getFieldValuesUpdate.body().add(valueMap.invoke("put").arg("value").arg(currencyValueFormatter.invoke("format").arg(JExpr.invoke(value.getGetter()))));
-		JVar fieldValuesUpdate = getFieldValuesUpdate.body().decl(jc.ref(FieldValuesUpdate.class), "result", JExpr._new(jc.ref(FieldValuesUpdate.class)).arg(externalId).arg("value").arg(valueMap));
+		JVar valueMap = getFieldValuesUpdate.body().decl(jc.ref(HashMap.class).narrow(String.class, String.class),
+				"valueMap", JExpr._new(jc.ref(HashMap.class).narrow(String.class, String.class)));
+		getFieldValuesUpdate.body().add(
+				valueMap.invoke("put").arg("currency")
+						.arg(JExpr.invoke(currency.getGetter()).invoke("getCurrencyCode")));
+		getFieldValuesUpdate.body().add(
+				valueMap.invoke("put").arg("value")
+						.arg(currencyValueFormatter.invoke("format").arg(JExpr.invoke(value.getGetter()))));
+		JVar fieldValuesUpdate = getFieldValuesUpdate.body().decl(jc.ref(FieldValuesUpdate.class), "result",
+				JExpr._new(jc.ref(FieldValuesUpdate.class)).arg(externalId).arg("value").arg(valueMap));
 		getFieldValuesUpdate.body()._return(fieldValuesUpdate);
-		
+
 		return result;
 	}
-
 }

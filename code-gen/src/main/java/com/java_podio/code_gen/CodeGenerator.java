@@ -6,17 +6,21 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.CaseFormat;
 import com.podio.app.Application;
 import com.podio.app.ApplicationField;
+import com.podio.app.CategoryOption;
 import com.podio.item.FieldValuesUpdate;
 import com.podio.item.FieldValuesView;
 import com.podio.item.Item;
 import com.podio.item.ItemCreate;
 import com.podio.item.ItemUpdate;
+import com.java_podio.code_gen.PodioType;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JCase;
+import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JDefinedClass;
@@ -63,6 +67,8 @@ public class CodeGenerator {
 
 	JDefinedClass currencyClass;
 
+	private EnumGenerator enumGenerator;
+
 	public CodeGenerator() {
 		jCodeModel = new JCodeModel();
 	}
@@ -71,10 +77,6 @@ public class CodeGenerator {
 
 	// TODO add tag handling
 
-	// TODO store original item?!
-
-	// TODO move fromItem from constructor to method
-
 	// TODO Add link to elment?
 
 	// TODO id, externalId, revision, ... to getItemCreate
@@ -82,11 +84,13 @@ public class CodeGenerator {
 	public void generateCode(Application app) {
 		printApp(app);
 
-		JPackage jp = jCodeModel._package("com.podio.generated");
+		JPackage jp = jCodeModel._package("podio.generated");
 
 		try {
 
 			currencyClass = new CurrencyGenerator(jCodeModel, jp).generateCurrencyClass();
+
+			enumGenerator = new EnumGenerator(jCodeModel, jp);
 
 			String className = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, app.getConfiguration().getName()
 					.toLowerCase());
@@ -105,6 +109,10 @@ public class CodeGenerator {
 			podioDateFormatter = jc.field(JMod.PROTECTED | JMod.STATIC | JMod.FINAL, SimpleDateFormat.class,
 					"PODIO_DATE_FORMATTER", JExpr.direct("new SimpleDateFormat(\"yyyy-MM-dd HH:mm:ss\")"));
 
+			// original Item:
+			JMember item = addMember(jc, "originalItem", jCodeModel.ref(Item.class),
+					"Stores the original item, as retrieved by java-podio api.", jCodeModel);
+
 			// TODO mark deleted elements as deprecated?!
 
 			// TODO add podio item title?!
@@ -113,9 +121,10 @@ public class CodeGenerator {
 
 			// setValuesFromItem method (needs to be defined before
 			// itemConstructor?!):
-			setValuesFromItem = jc.method(JMod.PUBLIC, jCodeModel.VOID, "fillFromItem");
+			setValuesFromItem = jc.method(JMod.PUBLIC, jCodeModel.VOID, "setValues");
 			JVar setValuesFromItemParam = setValuesFromItem.param(Item.class,
 					CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, className) + "Item");
+			setValuesFromItem.body().invoke(item.getSetter()).arg(setValuesFromItemParam);
 			JForEach setValuesFromItemForEachField = setValuesFromItem.body().forEach(
 					jCodeModel.ref(FieldValuesView.class), "field", setValuesFromItemParam.invoke("getFields"));
 			JSwitch setValuesFromItemSwitch = setValuesFromItemForEachField.body()._switch(
@@ -165,11 +174,14 @@ public class CodeGenerator {
 					javadoc = javadoc == null ? FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC : javadoc + "\n"
 							+ FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC;
 				}
-				JMember field = addMember(jc, name, getType(type), javadoc, jCodeModel);
+
+				JClass javaType = getType(type, f);
+				JMember field = addMember(jc, name, javaType, javadoc, jCodeModel);
 
 				// add setValuesFromItem part:
 				JCase jcase = setValuesFromItemSwitch._case(JExpr.lit(f.getId()));
-				jcase.body().invoke("set" + name).arg(createGetFieldValue(type, setValuesFromItemForEachField.var()));
+				jcase.body().invoke("set" + name)
+						.arg(createGetFieldValue(type, setValuesFromItemForEachField.var(), javaType));
 				jcase.body()._break();
 
 				// add getItemCreate part:
@@ -192,11 +204,24 @@ public class CodeGenerator {
 
 	}
 
-	private JType getType(PodioType type) {
-		JType result;
+	private JClass getType(PodioType type, ApplicationField f) {
+		JClass result;
 		switch (type) {
 		case MONEY:
 			result = currencyClass;
+			break;
+		case CATEGORY:
+			String name = f.getConfiguration().getLabel();
+			name = name.replace(' ', '-');
+			name = name.replaceAll("[^-a-zA-Z]", "");
+			name = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, name);
+			try {
+				result = enumGenerator.generateEnum(f, name);
+			} catch (JClassAlreadyExistsException e) {
+				System.out.println("ERROR: could not generate enum with name: " + name + "(might exist twice?!)");
+				e.printStackTrace();
+				result = jCodeModel.ref(Integer.class);
+			}
 			break;
 
 		default:
@@ -239,25 +264,33 @@ public class CodeGenerator {
 	 * @param type
 	 * @param jVar
 	 *            is expected to be of type {@link FieldValuesView}
+	 * @param javaType
 	 * @return an {@link JExpression} that evaluates to the value represented in
 	 *         {@code jVar} and is of type {@link type#getJavaType()}.
 	 */
-	private JExpression createGetFieldValue(PodioType type, JVar jVar) {
+	private JExpression createGetFieldValue(PodioType type, JVar jVar, JClass javaType) {
 		switch (type) {
 		case TEXT:
-			return createGetStringFieldValue(jVar, "value");
+			return createGetStringFieldValue(jVar, "value", jCodeModel);
 		case NUMBER:
 			return createGetDoubleFieldValue(jVar);
 		case MONEY:
 			return createGetCurrencyFieldValue(jVar);
 		case DATE:
 			return createGetDateFieldValue(jVar);
+		case CATEGORY:
+			return JExpr.cast(
+					Integer.class,
+					JExpr.cast(jCodeModel.ref(Map.class).narrow(String.class, Object.class),
+							jVar.invoke("getValues").invoke("get").arg(JExpr.lit(0)).invoke("get").arg("value"))
+							.invoke("id"));
+			// TODO: (Integer)
+			// ((Map<String, ?>) field.getValues().get(0).get("value"))
+			// .get("id")
+			
 		case APP:
 			// TODO: ((Map<String, Map<String, Integer>>)
 			// field.getValues().get(0)).get("value").get("item_id")
-		case CATEGORY:
-			// TODO: (Integer) ((Map<String, ?>)
-			// field.getValues().get(0).get("value")).get("id")
 		default:
 			System.out.println("WARNING: could not create getFieldValueExpression for type: " + type);
 			return JExpr._null();
@@ -271,13 +304,13 @@ public class CodeGenerator {
 	 */
 	private JExpression createGetCurrencyFieldValue(JVar jVar) {
 		return JExpr._new(currencyClass).arg(createGetDoubleFieldValue(jVar))
-				.arg(createGetStringFieldValue(jVar, "currency"));
+				.arg(createGetStringFieldValue(jVar, "currency", jCodeModel));
 	}
 
 	private JExpression createGetDateFieldValue(JVar jVar) {
 		setValuesFromItem._throws(ParseException.class);
 		constructorFromItem._throws(ParseException.class);
-		JExpression exp = createGetStringFieldValue(jVar, "start_date");
+		JExpression exp = createGetStringFieldValue(jVar, "start_date", jCodeModel);
 		// 2011-12-31 11:27:10
 		return podioDateFormatter.invoke("parse").arg(exp);
 	}
@@ -285,9 +318,9 @@ public class CodeGenerator {
 	/**
 	 * @param jVar
 	 *            needs to be of type {@link FieldValuesView}.
-	 * @return
+	 * @return String cast of field with key {@code field}
 	 */
-	private JExpression createGetStringFieldValue(JVar jVar, String field) {
+	public static JExpression createGetStringFieldValue(JVar jVar, String field, JCodeModel jCodeModel) {
 		return JExpr.cast(jCodeModel._ref(String.class), jVar.invoke("getValues").invoke("get").arg(JExpr.lit(0))
 				.invoke("get").arg(field));
 	}
@@ -299,7 +332,8 @@ public class CodeGenerator {
 	 */
 	private JExpression createGetDoubleFieldValue(JVar jVar) {
 		// Double.parseDouble((String) field.getValues().get(0).get("value")
-		return jCodeModel.ref(Double.class).staticInvoke("parseDouble").arg(createGetStringFieldValue(jVar, "value"));
+		return jCodeModel.ref(Double.class).staticInvoke("parseDouble")
+				.arg(createGetStringFieldValue(jVar, "value", jCodeModel));
 	}
 
 	/**
@@ -364,8 +398,15 @@ public class CodeGenerator {
 			System.out.println("FieldAllowedValues=" + appField.getConfiguration().getSettings().getAllowedValues());
 			System.out.println("FieldAllowedCurrencies="
 					+ appField.getConfiguration().getSettings().getAllowedCurrencies());
+			System.out.println("FieldMultiple=" + appField.getConfiguration().getSettings().getMultiple());
 			System.out.println("FieldReferenceableTypes="
 					+ appField.getConfiguration().getSettings().getReferenceableTypes());
+			if (appField.getConfiguration().getSettings().getOptions() != null) {
+				for (CategoryOption option : appField.getConfiguration().getSettings().getOptions()) {
+					System.out.println("FieldOption: " + option.getId() + ", " + option.getText() + ", "
+							+ option.getStatus());
+				}
+			}
 			System.out.println("FieldTextFieldSize=" + appField.getConfiguration().getSettings().getSize());
 		}
 		System.out.println("FieldType=" + appField.getType().toString());
