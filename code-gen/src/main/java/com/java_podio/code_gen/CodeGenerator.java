@@ -71,6 +71,8 @@ public class CodeGenerator {
 	// TODO move fromItem from constructor to method
 
 	// TODO Add link to elment?
+	
+	//TODO id, externalId, revision, ... to getItemCreate 
 
 	public void generateCode(Application app) {
 		printApp(app);
@@ -172,8 +174,10 @@ public class CodeGenerator {
 	private JExpression createFieldValuesUpdate(JMethod getter, PodioType type, ApplicationField f) {
 		switch (type) {
 			case TEXT:
+			case NUMBER:
 				return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value").arg(JExpr.invoke(getter));
-
+			case MONEY:
+				//TODO
 			default:
 				break;
 		}
@@ -268,50 +272,6 @@ public class CodeGenerator {
 		}
 
 		return new JMember(var, getter, setter);
-	}
-
-	/**
-	 * Represents a field variable including its getter and setter method.
-	 */
-	private class JMember {
-
-		private JFieldVar field;
-
-		private JMethod getter;
-
-		private JMethod setter;
-
-		public JMember(JFieldVar field, JMethod getter, JMethod setter) {
-			super();
-			this.field = field;
-			this.getter = getter;
-			this.setter = setter;
-		}
-
-		public JFieldVar getField() {
-			return field;
-		}
-
-		public JMethod getGetter() {
-			return getter;
-		}
-
-		public JMethod getSetter() {
-			return setter;
-		}
-
-		public void setField(JFieldVar field) {
-			this.field = field;
-		}
-
-		public void setGetter(JMethod getter) {
-			this.getter = getter;
-		}
-
-		public void setSetter(JMethod setter) {
-			this.setter = setter;
-		}
-
 	}
 
 	public static void printApp(Application app) {
