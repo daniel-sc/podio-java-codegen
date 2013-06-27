@@ -5,7 +5,6 @@ import com.podio.BaseAPI;
 import com.podio.ResourceFactory;
 import com.podio.app.AppAPI;
 import com.podio.app.Application;
-import com.podio.app.ApplicationField;
 import com.podio.oauth.OAuthClientCredentials;
 import com.podio.oauth.OAuthUserCredentials;
 
