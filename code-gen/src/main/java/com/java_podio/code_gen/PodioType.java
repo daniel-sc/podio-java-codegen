@@ -4,15 +4,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.podio.app.ApplicationField;
 import com.podio.app.ApplicationFieldType;
 
 /**
- * Eventually all {@link ApplicationFieldType} types should be represented here.
+ * Eventually all {@link ApplicationFieldType} types should be represented here.<br>
  */
 public enum PodioType {
 
-	UNDEFINED(Object.class), TEXT(String.class), NUMBER(Double.class), MONEY(Double.class), CATEGORY(Integer.class), APP(
-			Integer.class), DATE(Date.class);
+	UNDEFINED(Object.class), TEXT(String.class), NUMBER(Double.class), MONEY(Double.class), CATEGORY_SINGLE(EnumGenerator.class), APP(Integer.class), DATE(Date.class);
 
 	private final Class<? extends Object> javaType;
 
@@ -24,7 +24,7 @@ public enum PodioType {
 		map.put(TEXT, ApplicationFieldType.TEXT);
 		map.put(NUMBER, ApplicationFieldType.NUMBER);
 		map.put(MONEY, ApplicationFieldType.MONEY);
-		map.put(CATEGORY, ApplicationFieldType.CATEGORY);
+		map.put(CATEGORY_SINGLE, ApplicationFieldType.CATEGORY);
 		map.put(APP, ApplicationFieldType.APP);
 		map.put(DATE, ApplicationFieldType.DATE);
 	}
@@ -49,10 +49,12 @@ public enum PodioType {
 		return map.get(this);
 	}
 
-	public static PodioType forApplicationFieldType(ApplicationFieldType type) {
-		map.containsValue(type);
+	public static PodioType forApplicationField(ApplicationField f) {
+		if (ApplicationFieldType.CATEGORY.equals(map.get(f.getType())) && Boolean.TRUE.equals(f.getConfiguration().getSettings().getMultiple())) {
+			return UNDEFINED; // Categories with multiple values are not supportet yet.
+		}
 		for (PodioType podioType : map.keySet()) {
-			if (map.get(podioType).equals(type)) {
+			if (map.get(podioType).equals(f.getType())) {
 				return podioType;
 			}
 		}
