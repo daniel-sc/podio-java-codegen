@@ -179,7 +179,7 @@ public class AppGenerator {
 				result = currencyClass;
 				break;
 			case CATEGORY_SINGLE:
-				String name = CodeGenerator.createValidJavaTypeName(f.getConfiguration().getLabel());
+				String name = JavaNames.createValidJavaTypeName(f.getConfiguration().getLabel());
 				if (f.getConfiguration().getSettings().getMultiple().equals(Boolean.FALSE)) {
 
 					try {

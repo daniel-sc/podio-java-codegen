@@ -81,12 +81,12 @@ public class CodeGenerator {
 	 * @param javadoc
 	 *            is added to variable, setter and getter. Might be {@code null} .
 	 * @param jCodeModel
-	 * @param isDeprecated
-	 *            if set to {@code true}, the elements are annotated with {@link Deprecated}.
+	 * @param isDeleted
+	 *            if set to {@code true}, the elements are annotated with {@link Deprecated} and a corresponding javadoc comment is added.
 	 * @return a reference to the field and its getter and setter
 	 * @see CaseFormat#UPPER_CAMEL
 	 */
-	public static JMember addMember(JDefinedClass jc, String name, JType type, String javadoc, JCodeModel jCodeModel, boolean isDeprecated) {
+	public static JMember addMember(JDefinedClass jc, String name, JType type, String javadoc, JCodeModel jCodeModel, boolean isDeleted) {
 		String nameLowerCamelCase = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name);
 
 		// add member:
@@ -109,25 +109,16 @@ public class CodeGenerator {
 			setter.javadoc().add(javadoc);
 		}
 
-		if (isDeprecated) {
+		if (isDeleted) {
 			var.annotate(Deprecated.class);
+			var.javadoc().addDeprecated().add("This field is deleted in Podio!");
 			getter.annotate(Deprecated.class);
+			getter.javadoc().addDeprecated().add("This field is deleted in Podio!");
 			setter.annotate(Deprecated.class);
+			setter.javadoc().addDeprecated().add("This field is deleted in Podio!");
 		}
 
 		return new JMember(var, getter, setter);
-	}
-
-	/**
-	 * @param name
-	 *            might contain spaces and special characters.
-	 * @return valid upper camel case java type name
-	 */
-	public static String createValidJavaTypeName(String name) {
-		name = name.toLowerCase().replace(' ', '-').replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss");
-		name = name.replaceAll("[^-a-zA-Z]", "");
-		name = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, name);
-		return name;
 	}
 
 	public static void printApp(Application app) {

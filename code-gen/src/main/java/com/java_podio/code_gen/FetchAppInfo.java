@@ -1,10 +1,14 @@
 package com.java_podio.code_gen;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.podio.APIFactory;
 import com.podio.BaseAPI;
 import com.podio.ResourceFactory;
 import com.podio.app.AppAPI;
 import com.podio.app.Application;
+import com.podio.app.ApplicationMini;
 import com.podio.oauth.OAuthClientCredentials;
 import com.podio.oauth.OAuthUserCredentials;
 
@@ -13,13 +17,20 @@ import com.podio.oauth.OAuthUserCredentials;
  */
 public class FetchAppInfo {
 
-	private Integer appId;
+	private final OAuthUserCredentials credentials;
 
-	private AppAPI appAPI;
-
-	public FetchAppInfo(Integer appId, OAuthUserCredentials credentials) {
-		this.appId = appId;
-		appAPI = getAPI(appId, AppAPI.class, credentials);
+	public FetchAppInfo(OAuthUserCredentials credentials) {
+		this.credentials = credentials;
+	}
+	
+	public List<Application> fetchAppsForSpace(Integer spaceId) {
+		List<Application> result = new ArrayList<Application>();
+		AppAPI spaceAPI = getAPI(spaceId, AppAPI.class, credentials);
+		List<ApplicationMini> apps = spaceAPI.getAppsOnSpace(spaceId);
+		for(ApplicationMini appMini : apps) {
+			result.add(fetchApp(appMini.getId()));
+		}
+		return result;
 	}
 
 	/**
@@ -27,14 +38,9 @@ public class FetchAppInfo {
 	 * 
 	 * @return
 	 */
-	public Application fetch() {
+	public Application fetchApp(Integer appId) {
+		AppAPI appAPI = getAPI(appId, AppAPI.class, credentials);
 		Application app = appAPI.getApp(appId);
-		
-//		//DEBUG:
-//		for(ApplicationField field : app.getFields()) {
-//			ApplicationField f = appAPI.getField(appId, field.getId());
-//			CodeGenerator.printAppField(f);
-//		}
 		return app;
 	}
 
@@ -50,7 +56,7 @@ public class FetchAppInfo {
 	 * @param usercredentials
 	 * @return
 	 */
-	public static <T extends BaseAPI> T getAPI(Integer appId, Class<T> type, OAuthUserCredentials usercredentials) {
+	public static synchronized <T extends BaseAPI> T getAPI(Integer appId, Class<T> type, OAuthUserCredentials usercredentials) {
 		return getBaseAPI(usercredentials).getAPI(type);
 	}
 
