@@ -49,8 +49,9 @@ public class CurrencyGenerator {
 
 		JMember value = CodeGenerator.addMember(currencyClass, "value", jc.ref(Double.class), null, jc);
 
-		JFieldVar currencyValueFormatter = currencyClass.field(JMod.PUBLIC, NumberFormat.class, "currencyValueFormatter", jc
-				.ref(DecimalFormat.class).staticInvoke("getCurrencyInstance"));
+		JFieldVar currencyValueFormatter = currencyClass.field(JMod.PUBLIC | JMod.STATIC, NumberFormat.class, "currencyValueFormatter", jc
+				.ref(DecimalFormat.class).staticInvoke("getCurrencyInstance").arg(jc.ref(Locale.class).staticRef("US")));
+		currencyClass.init().add(currencyValueFormatter.invoke("setGroupingUsed").arg(JExpr.lit(false)));
 
 		// Standard constructor:
 		JMethod defaultConstructor = currencyClass.constructor(JMod.PUBLIC);
