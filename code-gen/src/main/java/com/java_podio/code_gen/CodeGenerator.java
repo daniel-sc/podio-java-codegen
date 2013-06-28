@@ -61,15 +61,32 @@ public class CodeGenerator {
 	 * 
 	 * @param jc
 	 * @param name
+	 * @param type
+	 * @param javadoc
+	 * @param jCodeModel
+	 * @return
+	 * @see #addMember(JDefinedClass, String, JType, String, JCodeModel, boolean)
+	 */
+	public static JMember addMember(JDefinedClass jc, String name, JType type, String javadoc, JCodeModel jCodeModel) {
+		return addMember(jc, name, type, javadoc, jCodeModel, false);
+	}
+
+	/**
+	 * Adds field to class, including setter and getter.
+	 * 
+	 * @param jc
+	 * @param name
 	 *            of field in upper camel case
 	 * @param type
 	 * @param javadoc
 	 *            is added to variable, setter and getter. Might be {@code null} .
 	 * @param jCodeModel
+	 * @param isDeprecated
+	 *            if set to {@code true}, the elements are annotated with {@link Deprecated}.
 	 * @return a reference to the field and its getter and setter
 	 * @see CaseFormat#UPPER_CAMEL
 	 */
-	public static JMember addMember(JDefinedClass jc, String name, JType type, String javadoc, JCodeModel jCodeModel) {
+	public static JMember addMember(JDefinedClass jc, String name, JType type, String javadoc, JCodeModel jCodeModel, boolean isDeprecated) {
 		String nameLowerCamelCase = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name);
 
 		// add member:
@@ -90,6 +107,12 @@ public class CodeGenerator {
 			var.javadoc().add(javadoc);
 			getter.javadoc().add(javadoc);
 			setter.javadoc().add(javadoc);
+		}
+
+		if (isDeprecated) {
+			var.annotate(Deprecated.class);
+			getter.annotate(Deprecated.class);
+			setter.annotate(Deprecated.class);
 		}
 
 		return new JMember(var, getter, setter);
