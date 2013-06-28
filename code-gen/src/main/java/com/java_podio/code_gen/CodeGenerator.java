@@ -155,4 +155,16 @@ public class CodeGenerator {
 
 	}
 
+	public static void addToString(JDefinedClass jclass, JCodeModel jCodeModel) {
+		JMethod toString = jclass.method(JMod.PUBLIC, jCodeModel.ref(String.class), "toString");
+		JVar result = toString.body().decl(jCodeModel.ref(String.class), "result", JExpr._super().invoke("toString"));
+		for(JFieldVar jvar : jclass.fields().values()) {
+			if((jvar.mods().getValue() & JMod.STATIC) == JMod.STATIC) {
+				continue;
+			}
+			toString.body().assignPlus(result, JExpr.lit(", "+jvar.name()+"=").plus(jvar));
+		}
+		toString.body()._return(result);
+	}
+
 }

@@ -96,6 +96,8 @@ public class CurrencyGenerator {
 		JVar fieldValuesUpdate = getFieldValuesUpdate.body().decl(jc.ref(FieldValuesUpdate.class), "result",
 				JExpr._new(jc.ref(FieldValuesUpdate.class)).arg(externalId).arg("value").arg(valueMap));
 		getFieldValuesUpdate.body()._return(fieldValuesUpdate);
+		
+		CodeGenerator.addToString(currencyClass, jc);
 
 		return currencyClass;
 	}

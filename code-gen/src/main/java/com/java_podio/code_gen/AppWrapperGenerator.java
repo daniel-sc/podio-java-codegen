@@ -77,6 +77,8 @@ public class AppWrapperGenerator {
 		setValues.javadoc().addParam(item);
 		setValues.javadoc().addThrows(ParseException.class);
 		setValues.body().invoke(originalItem.getSetter()).arg(item);
+		
+		CodeGenerator.addToString(appWrapper, jc);
 
 		return appWrapper;
 	}

@@ -80,7 +80,7 @@ public class AppGenerator {
 	}
 
 	/**
-	 * Generates a app wrapper class.
+	 * Generates a wrapper class for a podio app.
 	 * 
 	 * @return
 	 * @throws JClassAlreadyExistsException
@@ -89,9 +89,9 @@ public class AppGenerator {
 	 */
 	public JDefinedClass getAppClass(Application app) throws JClassAlreadyExistsException {
 		// Debug:
-		CodeGenerator.printApp(app);
+//		CodeGenerator.printApp(app);
 
-		String className = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, app.getConfiguration().getName().toLowerCase());
+		String className = JavaNames.createValidJavaTypeName(app.getConfiguration().getName(), jp.name());
 		jc = jp._class(className)._extends(appWrapperGenerator.getAppWrapperClass());
 
 		enumGenerator = new EnumGenerator(jCodeModel, jp.subPackage(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, className)));
@@ -101,8 +101,6 @@ public class AppGenerator {
 
 		jc.method(JMod.PUBLIC, Integer.class, "getAppId").body()._return(JExpr.lit(app.getId()));
 		jc.method(JMod.PUBLIC, String.class, "getAppExternalId").body()._return(JExpr.lit(app.getConfiguration().getExternalId() == null ? "" : app.getConfiguration().getExternalId()));
-
-		// TODO mark deleted elements as deprecated?!
 
 		// TODO add podio item title?!
 
@@ -122,6 +120,7 @@ public class AppGenerator {
 		getItemCreate = jc.method(JMod.PUBLIC, jCodeModel._ref(ItemCreate.class), "getItemCreate");
 		itemCreateResult = getItemCreate.body().decl(jCodeModel.ref(ItemCreate.class), "result", JExpr._new(jCodeModel.ref(ItemCreate.class)));
 		getItemCreate.body().add(itemCreateResult.invoke("setExternalId").arg(JExpr.invoke(appWrapperGenerator.getAppExternalId())));
+		getItemCreate.body().add(itemCreateResult.invoke("setRevision").arg(JExpr.invoke(appWrapperGenerator.getPodioRevision().getGetter())));
 		itemCreateFieldValues = getItemCreate.body().decl(jCodeModel.ref(List.class).narrow(FieldValuesUpdate.class), "fieldValuesList", JExpr._new(jCodeModel.ref(ArrayList.class).narrow(FieldValuesUpdate.class)));
 
 		// Default constructor:
@@ -162,15 +161,15 @@ public class AppGenerator {
 
 		getItemCreate.body().add(itemCreateResult.invoke("setFields").arg(itemCreateFieldValues));
 		getItemCreate.body()._return(itemCreateResult);
-
+		
+		CodeGenerator.addToString(jc, jCodeModel);
+		
 		return jc;
 	}
 
 	// TODO add tag handling
 
 	// TODO Add link to element?
-
-	// TODO add revision, to getItemCreate (needs update of podio java api!)
 
 	private JClass getType(PodioType type, ApplicationField f) {
 		JClass result;
@@ -179,7 +178,7 @@ public class AppGenerator {
 				result = currencyClass;
 				break;
 			case CATEGORY_SINGLE:
-				String name = JavaNames.createValidJavaTypeName(f.getConfiguration().getLabel());
+				String name = JavaNames.createValidJavaTypeName(f.getConfiguration().getLabel(), jp.name());
 				if (f.getConfiguration().getSettings().getMultiple().equals(Boolean.FALSE)) {
 
 					try {

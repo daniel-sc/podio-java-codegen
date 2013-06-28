@@ -69,7 +69,8 @@ public class EnumGenerator {
 		// literals:
 		result.enumConstant("NONE").arg(JExpr.lit(0)).arg(JExpr.lit("--"));
 		for (CategoryOption option : f.getConfiguration().getSettings().getOptions()) {
-			JEnumConstant constant = result.enumConstant(CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, JavaNames.createValidJavaTypeName(option.getText())));
+			JEnumConstant constant = result.enumConstant(CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE,
+					JavaNames.createValidJavaTypeName(option.getText(), name)));
 			constant.arg(JExpr.lit(option.getId())).arg(JExpr.lit(option.getText()));
 			if (option.getStatus().equals(CategoryOptionStatus.DELETED)) {
 				constant.annotate(Deprecated.class);
