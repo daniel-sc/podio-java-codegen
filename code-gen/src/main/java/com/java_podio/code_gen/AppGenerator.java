@@ -121,6 +121,7 @@ public class AppGenerator {
 		// getItemCreate method:
 		getItemCreate = jc.method(JMod.PUBLIC, jCodeModel._ref(ItemCreate.class), "getItemCreate");
 		itemCreateResult = getItemCreate.body().decl(jCodeModel.ref(ItemCreate.class), "result", JExpr._new(jCodeModel.ref(ItemCreate.class)));
+		getItemCreate.body().add(itemCreateResult.invoke("setExternalId").arg(JExpr.invoke(appWrapperGenerator.getAppExternalId())));
 		itemCreateFieldValues = getItemCreate.body().decl(jCodeModel.ref(List.class).narrow(FieldValuesUpdate.class), "fieldValuesList", JExpr._new(jCodeModel.ref(ArrayList.class).narrow(FieldValuesUpdate.class)));
 
 		// Default constructor:
@@ -169,7 +170,7 @@ public class AppGenerator {
 
 	// TODO Add link to element?
 
-	// TODO id, externalId, revision, ... to getItemCreate
+	// TODO add revision, to getItemCreate (needs update of podio java api!)
 
 	private JClass getType(PodioType type, ApplicationField f) {
 		JClass result;

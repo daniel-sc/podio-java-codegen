@@ -38,6 +38,10 @@ public class AppWrapperGenerator {
 
 	private JFieldVar podioDateFormatter;
 
+	private JMethod getAppExternalId;
+
+	private JMethod getAppId;
+
 	public AppWrapperGenerator(JCodeModel jCodeModel, JPackage jp) {
 		this.jc = jCodeModel;
 		this.jp = jp;
@@ -63,8 +67,8 @@ public class AppWrapperGenerator {
 		podioId = CodeGenerator.addMember(appWrapper, "PodioId", jc.ref(Integer.class), "This represents the internal Podio id of the item.", jc);
 		podioRevision = CodeGenerator.addMember(appWrapper, "PodioRevision", jc.ref(Integer.class), "This represents the internal Podio revision of the item.", jc);
 
-		appWrapper.method(JMod.ABSTRACT | JMod.PUBLIC, Integer.class, "getAppId");
-		appWrapper.method(JMod.ABSTRACT | JMod.PUBLIC, String.class, "getAppExternalId");
+		getAppId = appWrapper.method(JMod.ABSTRACT | JMod.PUBLIC, Integer.class, "getAppId");
+		getAppExternalId = appWrapper.method(JMod.ABSTRACT | JMod.PUBLIC, String.class, "getAppExternalId");
 		appWrapper.method(JMod.ABSTRACT | JMod.PUBLIC, ItemCreate.class, "getItemCreate").javadoc().add("As {@link ItemCreate} inherits from {@link ItemUpdate} this method can be used to generate updates!");
 
 		setValues = appWrapper.method(JMod.PUBLIC, jc.VOID, "setValue")._throws(ParseException.class);
@@ -111,4 +115,19 @@ public class AppWrapperGenerator {
 		}
 		return podioDateFormatter;
 	}
+	
+	public JMethod getAppExternalId() throws JClassAlreadyExistsException {
+		if (getAppExternalId == null) {
+			getAppWrapperClass();
+		}
+		return getAppExternalId;
+	}
+	
+	public JMethod getAppId() throws JClassAlreadyExistsException {
+		if (getAppId == null) {
+			getAppWrapperClass();
+		}
+		return getAppId;
+	}
+	
 }
