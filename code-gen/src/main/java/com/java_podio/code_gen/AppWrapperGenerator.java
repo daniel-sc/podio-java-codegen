@@ -29,33 +29,31 @@ import com.sun.codemodel.JVar;
  */
 public class AppWrapperGenerator {
 
-	protected JCodeModel jc;
+	private JCodeModel jc;
 
-	protected JPackage jp;
+	private JMember _originalItem;
 
-	protected JMember _originalItem;
+	private JMember _podioId;
 
-	protected JMember _podioId;
+	private JMember _podioRevision;
 
-	protected JMember _podioRevision;
+	private JMember _podioTitle;
 
-	protected JMember _podioTitle;
-
-	protected JMethod _setValue;
+	private JMethod _setValue;
 
 	private JDefinedClass appWrapper;
 
-	private JFieldVar podioDateTimeFormatter;
+	private JFieldVar _PODIO_DATE_TIME_FORMATTER;
 
 	private JMethod getAppExternalId;
 
 	private JMethod getAppId;
 
-	private JMethod getFieldValuesUpdateFromDate;
+	private JMethod _getFieldValuesUpdateFromDate;
 
-	private JFieldVar podioDateFormatter;
+	private JFieldVar _PODIO_DATE_FORMATTER;
 
-	private JMethod formatDate;
+	private JMethod _formatDate;
 
 	private JMethod _getItemCreate;
 
@@ -63,8 +61,18 @@ public class AppWrapperGenerator {
 
 	public AppWrapperGenerator(JCodeModel jCodeModel, JPackage jp) throws JClassAlreadyExistsException {
 		this.jc = jCodeModel;
-		this.jp = jp;
 		appWrapper = jp != null ? jp._class(JMod.ABSTRACT | JMod.PUBLIC, "AppWrapper") : jc._class("AppWrapper");
+		CodeGenerator.addToString(appWrapper, jc);
+
+		// assure all relevant fields/methods are actually created:
+		_setValue();
+		_getItemCreate();
+		_getAppExternalId();
+		_getAppId();
+		_originalItem();
+		_podioId();
+		_podioTitle();
+		_podioTags();
 	}
 
 	/**
@@ -75,42 +83,7 @@ public class AppWrapperGenerator {
 	 * @throws JClassAlreadyExistsException
 	 * @see {@link AppWrapper}
 	 */
-	public JDefinedClass getAppWrapperClass() throws JClassAlreadyExistsException {
-		if (appWrapper != null) {
-			return appWrapper;
-		}
-
-		podioDateTimeFormatter = appWrapper.field(JMod.PROTECTED | JMod.STATIC | JMod.FINAL, SimpleDateFormat.class,
-				"PODIO_DATE_TIME_FORMATTER", JExpr.direct("new SimpleDateFormat(\"yyyy-MM-dd HH:mm:ss\")"));
-		podioDateFormatter = appWrapper.field(JMod.PROTECTED | JMod.STATIC | JMod.FINAL, SimpleDateFormat.class,
-				"PODIO_DATE_FORMATTER", JExpr.direct("new SimpleDateFormat(\"yyyy-MM-dd\")"));
-
-		formatDate = appWrapper.method(JMod.PUBLIC | JMod.STATIC, jc.ref(Date.class), "formatDate")._throws(
-				jc.ref(ParseException.class));
-		JVar formatDateParam = formatDate.param(jc.ref(String.class), "dateOrDateTime");
-		JConditional cond = formatDate.body()._if(formatDateParam.invoke("length").lte(JExpr.lit(10)));
-		cond._then()._return(podioDateFormatter.invoke("parse").arg(formatDateParam));
-		cond._else()._return(podioDateTimeFormatter.invoke("parse").arg(formatDateParam));
-
-		getAppId = appWrapper.method(JMod.PUBLIC, Integer.class, "getAppId");
-		getAppExternalId = appWrapper.method(JMod.ABSTRACT | JMod.PUBLIC, String.class, "getAppExternalId");
-
-		// static getFieldValuesUpdate:
-		getFieldValuesUpdateFromDate = appWrapper.method(JMod.PUBLIC | JMod.STATIC, FieldValuesUpdate.class,
-				"getFieldValuesUpdate");
-		JVar date = getFieldValuesUpdateFromDate.param(Date.class, "date");
-		JVar dateHashMap = getFieldValuesUpdateFromDate.body().decl(
-				jc.ref(HashMap.class).narrow(String.class, String.class), "dateHashMap",
-				JExpr._new(jc.ref(HashMap.class).narrow(String.class, String.class)));
-		getFieldValuesUpdateFromDate.body().add(
-				dateHashMap.invoke("put").arg("start").arg(podioDateTimeFormatter.invoke("format").arg(date)));
-		getFieldValuesUpdateFromDate.body().add(
-				dateHashMap.invoke("put").arg("end").arg(podioDateTimeFormatter.invoke("format").arg(date)));
-		getFieldValuesUpdateFromDate.body()._return(
-				JExpr._new(jc.ref(FieldValuesUpdate.class)).arg("datum").arg(dateHashMap));
-
-		CodeGenerator.addToString(appWrapper, jc);
-
+	public JDefinedClass getAppWrapperClass() {
 		return appWrapper;
 	}
 
@@ -164,30 +137,35 @@ public class AppWrapperGenerator {
 		return _podioTitle;
 	}
 
-	public JFieldVar getPodioDateTimeFormatter() throws JClassAlreadyExistsException {
-		if (podioDateTimeFormatter == null) {
-			getAppWrapperClass();
+	public JFieldVar _PODIO_DATE_TIME_FORMATTER() {
+		if (_PODIO_DATE_TIME_FORMATTER == null) {
+			_PODIO_DATE_TIME_FORMATTER = appWrapper.field(JMod.PROTECTED | JMod.STATIC | JMod.FINAL,
+					SimpleDateFormat.class, "PODIO_DATE_TIME_FORMATTER",
+					JExpr.direct("new SimpleDateFormat(\"yyyy-MM-dd HH:mm:ss\")"));
+
 		}
-		return podioDateTimeFormatter;
+		return _PODIO_DATE_TIME_FORMATTER;
 	}
 
-	public JFieldVar getPodioDateFormatter() throws JClassAlreadyExistsException {
-		if (podioDateFormatter == null) {
-			getAppWrapperClass();
+	public JFieldVar _PODIO_DATE_FORMATTER() {
+		if (_PODIO_DATE_FORMATTER == null) {
+			_PODIO_DATE_FORMATTER = appWrapper.field(JMod.PROTECTED | JMod.STATIC | JMod.FINAL, SimpleDateFormat.class,
+					"PODIO_DATE_FORMATTER", JExpr.direct("new SimpleDateFormat(\"yyyy-MM-dd\")"));
+
 		}
-		return podioDateFormatter;
+		return _PODIO_DATE_FORMATTER;
 	}
 
-	public JMethod getAppExternalId() throws JClassAlreadyExistsException {
+	public JMethod _getAppExternalId() {
 		if (getAppExternalId == null) {
-			getAppWrapperClass();
+			getAppExternalId = appWrapper.method(JMod.ABSTRACT | JMod.PUBLIC, String.class, "getAppExternalId");
 		}
 		return getAppExternalId;
 	}
 
-	public JMethod getAppId() throws JClassAlreadyExistsException {
+	public JMethod _getAppId() throws JClassAlreadyExistsException {
 		if (getAppId == null) {
-			getAppWrapperClass();
+			getAppId = appWrapper.method(JMod.PUBLIC | JMod.ABSTRACT, Integer.class, "getAppId");
 		}
 		return getAppId;
 	}
@@ -208,11 +186,11 @@ public class AppWrapperGenerator {
 					.add("As {@link ItemCreate} inherits from {@link ItemUpdate} this method can be used to generate updates!");
 			JVar _itemCreateResult = _getItemCreate.body().decl(jc.ref(ItemCreate.class), "result",
 					JExpr._new(jc.ref(ItemCreate.class)));
-			_getItemCreate.body().add(_itemCreateResult.invoke("setExternalId").arg(JExpr.invoke(getAppExternalId)));
+			_getItemCreate.body().add(_itemCreateResult.invoke("setExternalId").arg(JExpr.invoke(_getAppExternalId())));
 			_getItemCreate.body().add(
 					_itemCreateResult.invoke("setRevision").arg(JExpr.invoke(_podioRevision().getGetter())));
-			_getItemCreate.body()
-					.add(_itemCreateResult.invoke("setTitle").arg(JExpr.invoke(_podioTitle().getGetter())));
+//			_getItemCreate.body()
+//					.add(_itemCreateResult.invoke("setTitle").arg(JExpr.invoke(_podioTitle().getGetter())));
 			_getItemCreate.body().add(_itemCreateResult.invoke("setTags").arg(JExpr.invoke(_podioTags().getGetter())));
 			JVar fieldValuesList = _getItemCreate.body().decl(jc.ref(List.class).narrow(FieldValuesUpdate.class),
 					"fieldValuesList", JExpr._new(jc.ref(ArrayList.class).narrow(FieldValuesUpdate.class)));
@@ -222,18 +200,35 @@ public class AppWrapperGenerator {
 		return _getItemCreate;
 	}
 
-	public JMethod getFieldValuesUpdateFromDate() throws JClassAlreadyExistsException {
-		if (getFieldValuesUpdateFromDate == null) {
-			getAppWrapperClass();
+	public JMethod _getFieldValuesUpdateFromDate() {
+		if (_getFieldValuesUpdateFromDate == null) {
+			_getFieldValuesUpdateFromDate = appWrapper.method(JMod.PUBLIC | JMod.STATIC, FieldValuesUpdate.class,
+					"getFieldValuesUpdate");
+			JVar date = _getFieldValuesUpdateFromDate.param(Date.class, "date");
+			JVar dateHashMap = _getFieldValuesUpdateFromDate.body().decl(
+					jc.ref(HashMap.class).narrow(String.class, String.class), "dateHashMap",
+					JExpr._new(jc.ref(HashMap.class).narrow(String.class, String.class)));
+			_getFieldValuesUpdateFromDate.body()
+					.add(dateHashMap.invoke("put").arg("start")
+							.arg(_PODIO_DATE_TIME_FORMATTER().invoke("format").arg(date)));
+			_getFieldValuesUpdateFromDate.body().add(
+					dateHashMap.invoke("put").arg("end").arg(_PODIO_DATE_TIME_FORMATTER().invoke("format").arg(date)));
+			_getFieldValuesUpdateFromDate.body()._return(
+					JExpr._new(jc.ref(FieldValuesUpdate.class)).arg("datum").arg(dateHashMap));
 		}
-		return getFieldValuesUpdateFromDate;
+		return _getFieldValuesUpdateFromDate;
 	}
 
-	public JMethod getFormatDate() throws JClassAlreadyExistsException {
-		if (formatDate == null) {
-			getAppWrapperClass();
+	public JMethod _formatDate() {
+		if (_formatDate == null) {
+			_formatDate = appWrapper.method(JMod.PUBLIC | JMod.STATIC, jc.ref(Date.class), "formatDate")._throws(
+					jc.ref(ParseException.class));
+			JVar formatDateParam = _formatDate.param(jc.ref(String.class), "dateOrDateTime");
+			JConditional cond = _formatDate.body()._if(formatDateParam.invoke("length").lte(JExpr.lit(10)));
+			cond._then()._return(_PODIO_DATE_FORMATTER().invoke("parse").arg(formatDateParam));
+			cond._else()._return(_PODIO_DATE_TIME_FORMATTER().invoke("parse").arg(formatDateParam));
 		}
-		return formatDate;
+		return _formatDate;
 	}
 
 }

@@ -50,7 +50,7 @@ public class CurrencyGenerator {
 		JMember value = CodeGenerator.addMember(currencyClass, "value", jc.ref(Double.class), null, jc);
 
 		JFieldVar currencyValueFormatter = currencyClass.field(JMod.PUBLIC | JMod.STATIC, NumberFormat.class, "currencyValueFormatter", jc
-				.ref(DecimalFormat.class).staticInvoke("getCurrencyInstance").arg(jc.ref(Locale.class).staticRef("US")));
+				.ref(DecimalFormat.class).staticInvoke("getInstance").arg(jc.ref(Locale.class).staticRef("US")));
 		currencyClass.init().add(currencyValueFormatter.invoke("setGroupingUsed").arg(JExpr.lit(false)));
 
 		// Standard constructor:
@@ -95,7 +95,7 @@ public class CurrencyGenerator {
 				valueMap.invoke("put").arg("value")
 						.arg(currencyValueFormatter.invoke("format").arg(JExpr.invoke(value.getGetter()))));
 		JVar fieldValuesUpdate = getFieldValuesUpdate.body().decl(jc.ref(FieldValuesUpdate.class), "result",
-				JExpr._new(jc.ref(FieldValuesUpdate.class)).arg(externalId).arg("value").arg(valueMap));
+				JExpr._new(jc.ref(FieldValuesUpdate.class)).arg(externalId).arg(valueMap));
 		getFieldValuesUpdate.body()._return(fieldValuesUpdate);
 		
 		CodeGenerator.addToString(currencyClass, jc);

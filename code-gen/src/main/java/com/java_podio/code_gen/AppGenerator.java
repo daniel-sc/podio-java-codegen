@@ -46,7 +46,7 @@ public class AppGenerator {
 	/**
 	 * Sets values from a given {@link Item}.
 	 */
-	JMethod _setValues;
+	JMethod _setValue;
 
 	/**
 	 * Constructs a {@link ItemCreate} from current instance. As
@@ -54,8 +54,6 @@ public class AppGenerator {
 	 * used for updates as well.
 	 */
 	private JMethod _getItemCreate;
-
-	private JVar itemCreateResult;
 
 	/**
 	 * Initialized after first call of {@link #_getItemCreate()}.
@@ -77,11 +75,11 @@ public class AppGenerator {
 	 */
 	private JDefinedClass jc = null;
 
-	// private JVar setValuesFromItemParam;
-
 	private JForEach setValuesFromItemForEachField;
 
 	private JSwitch setValuesFromItemSwitch;
+
+	private JVar itemCreateResult;
 
 	public AppGenerator(JCodeModel jCodeModel, JPackage jPackage, AppWrapperGenerator appWrapperGenerator,
 			CurrencyGenerator currencyGenerator) throws JClassAlreadyExistsException {
@@ -106,6 +104,12 @@ public class AppGenerator {
 
 		String className = JavaNames.createValidJavaTypeName(app.getConfiguration().getName(), jp.name());
 		jc = jp._class(className)._extends(appWrapperGenerator.getAppWrapperClass());
+		
+		_setValue = null;
+		_setValue = _setValue();
+		_getItemCreate = null;
+		_getItemCreate = _getItemCreate();
+
 
 		enumGenerator = new EnumGenerator(jCodeModel, jp.subPackage(CaseFormat.UPPER_CAMEL.to(
 				CaseFormat.LOWER_UNDERSCORE, className)));
@@ -130,8 +134,8 @@ public class AppGenerator {
 		constructorFromItem = jc.constructor(JMod.PUBLIC);
 		JVar constructorFromItemParam = constructorFromItem.param(Item.class,
 				CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, className) + "Item");
-		constructorFromItem.body().invoke(_setValues()).arg(constructorFromItemParam);
-
+		constructorFromItem.body().invoke(_setValue()).arg(constructorFromItemParam);
+		
 		for (ApplicationField f : app.getFields()) {
 			String name = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, f.getExternalId().toLowerCase());
 			PodioType type = PodioType.forApplicationField(f);
@@ -159,22 +163,24 @@ public class AppGenerator {
 				cond._then().add(_itemCreateFieldValues.invoke("add").arg(fieldValueUpdate));
 			}
 		}
+		
+		_getItemCreate().body()._return(itemCreateResult);
 
 		CodeGenerator.addToString(jc, jCodeModel);
 
 		return jc;
 	}
 
-	public JMethod _setValues() throws JClassAlreadyExistsException {
-		if (_setValues != null) {
-			return _setValues;
+	public JMethod _setValue() throws JClassAlreadyExistsException {
+		if (_setValue != null) {
+			return _setValue;
 		}
 
-		_setValues = jc.method(JMod.PUBLIC, jCodeModel.VOID, "setValues");
-		JVar setValuesFromItemParam = _setValues.param(Item.class,
+		_setValue = jc.method(JMod.PUBLIC, jCodeModel.VOID, appWrapperGenerator._setValue().name());
+		JVar setValuesFromItemParam = _setValue.param(Item.class,
 				CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, "item"));
-		_setValues.body().add((JExpr._super().invoke(appWrapperGenerator._setValue()).arg(setValuesFromItemParam)));
-		setValuesFromItemForEachField = _setValues.body().forEach(jCodeModel.ref(FieldValuesView.class), "field",
+		_setValue.body().add((JExpr._super().invoke(appWrapperGenerator._setValue()).arg(setValuesFromItemParam)));
+		setValuesFromItemForEachField = _setValue.body().forEach(jCodeModel.ref(FieldValuesView.class), "field",
 				setValuesFromItemParam.invoke("getFields"));
 		setValuesFromItemSwitch = setValuesFromItemForEachField.body()._switch(
 				setValuesFromItemForEachField.var().invoke("getId"));
@@ -185,21 +191,22 @@ public class AppGenerator {
 						"System.out.println(\"ERROR: unexpected field id=\"+field.getId() (App: \"+this.getClass().getName()+\"");
 		setValuesFromItemSwitch._default().body()._break();
 
-		return _setValues;
+		return _setValue;
 	}
 
-	public JMethod _getItemCreate() throws JClassAlreadyExistsException {
+	public JMethod _getItemCreate() {
 		if (_getItemCreate != null) {
 			return _getItemCreate;
 		}
 		// getItemCreate method:
-		_getItemCreate = jc.method(JMod.PUBLIC, jCodeModel._ref(ItemCreate.class), "getItemCreate");
+		_getItemCreate = jc.method(JMod.PUBLIC, jCodeModel._ref(ItemCreate.class), appWrapperGenerator._getItemCreate().name());
 		itemCreateResult = _getItemCreate.body().decl(jCodeModel.ref(ItemCreate.class), "result",
 				JExpr._super().invoke(appWrapperGenerator._getItemCreate()));
 		_itemCreateFieldValues = _getItemCreate.body().decl(jCodeModel.ref(List.class).narrow(FieldValuesUpdate.class),
 				"fieldValuesList", itemCreateResult.invoke("getFields"));
 
-		_getItemCreate.body()._return(itemCreateResult);
+		//as statements are added later, the return statement has to be added later as well!
+//		_getItemCreate.body()._return(itemCreateResult);
 
 		return _getItemCreate;
 
@@ -280,7 +287,7 @@ public class AppGenerator {
 					.arg(jCodeModel.ref(Collections.class).staticInvoke("singletonMap").arg("item_id")
 							.arg(JExpr.invoke(getter)));
 		case DATE:
-			return JExpr.invoke(appWrapperGenerator.getFieldValuesUpdateFromDate()).arg(JExpr.invoke(getter));
+			return JExpr.invoke(appWrapperGenerator._getFieldValuesUpdateFromDate()).arg(JExpr.invoke(getter));
 		default:
 			return null;
 		}
@@ -340,11 +347,11 @@ public class AppGenerator {
 	}
 
 	private JExpression createGetDateFieldValue(JVar jVar) throws JClassAlreadyExistsException {
-		_setValues()._throws(ParseException.class);
+		_setValue()._throws(ParseException.class);
 		constructorFromItem._throws(ParseException.class);
 		JExpression exp = createGetStringFieldValue(jVar, "start_date", jCodeModel);
 		// 2011-12-31 11:27:10
-		return JExpr.invoke(appWrapperGenerator.getFormatDate()).arg(exp);
+		return JExpr.invoke(appWrapperGenerator._formatDate()).arg(exp);
 	}
 
 	/**
