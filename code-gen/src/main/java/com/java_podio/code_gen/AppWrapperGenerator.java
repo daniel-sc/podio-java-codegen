@@ -97,8 +97,8 @@ public class AppWrapperGenerator {
 			_setValue.javadoc().addThrows(ParseException.class);
 			_setValue.body().invoke(_originalItem().getSetter()).arg(item);
 			_setValue.body().assign(_podioId().getField(), item.invoke("getId"));
-			_setValue.body().assign(_podioRevision().getField(),
-					item.invoke("getCurrentRevision").invoke("getRevision"));
+			_setValue.body()._if(item.invoke("getCurrentRevision").ne(JExpr._null()))._then()
+					.assign(_podioRevision().getField(), item.invoke("getCurrentRevision").invoke("getRevision"));
 			_setValue.body().assign(_podioTitle().getField(), item.invoke("getTitle"));
 			_setValue.body().assign(_podioTags().getField(), item.invoke("getTags"));
 		}
@@ -189,8 +189,8 @@ public class AppWrapperGenerator {
 			_getItemCreate.body().add(_itemCreateResult.invoke("setExternalId").arg(JExpr.invoke(_getAppExternalId())));
 			_getItemCreate.body().add(
 					_itemCreateResult.invoke("setRevision").arg(JExpr.invoke(_podioRevision().getGetter())));
-//			_getItemCreate.body()
-//					.add(_itemCreateResult.invoke("setTitle").arg(JExpr.invoke(_podioTitle().getGetter())));
+			// _getItemCreate.body()
+			// .add(_itemCreateResult.invoke("setTitle").arg(JExpr.invoke(_podioTitle().getGetter())));
 			_getItemCreate.body().add(_itemCreateResult.invoke("setTags").arg(JExpr.invoke(_podioTags().getGetter())));
 			JVar fieldValuesList = _getItemCreate.body().decl(jc.ref(List.class).narrow(FieldValuesUpdate.class),
 					"fieldValuesList", JExpr._new(jc.ref(ArrayList.class).narrow(FieldValuesUpdate.class)));
