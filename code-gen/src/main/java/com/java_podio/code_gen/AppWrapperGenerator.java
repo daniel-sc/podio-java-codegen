@@ -2,8 +2,10 @@ package com.java_podio.code_gen;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import com.podio.item.FieldValuesUpdate;
 import com.podio.item.Item;
@@ -31,13 +33,15 @@ public class AppWrapperGenerator {
 
 	protected JPackage jp;
 
-	protected JMember originalItem;
+	protected JMember _originalItem;
 
-	protected JMember podioId;
+	protected JMember _podioId;
 
-	protected JMember podioRevision;
+	protected JMember _podioRevision;
 
-	protected JMethod setValues;
+	protected JMember _podioTitle;
+
+	protected JMethod _setValue;
 
 	private JDefinedClass appWrapper;
 
@@ -53,9 +57,14 @@ public class AppWrapperGenerator {
 
 	private JMethod formatDate;
 
-	public AppWrapperGenerator(JCodeModel jCodeModel, JPackage jp) {
+	private JMethod _getItemCreate;
+
+	private JMember _podioTags;
+
+	public AppWrapperGenerator(JCodeModel jCodeModel, JPackage jp) throws JClassAlreadyExistsException {
 		this.jc = jCodeModel;
 		this.jp = jp;
+		appWrapper = jp != null ? jp._class(JMod.ABSTRACT | JMod.PUBLIC, "AppWrapper") : jc._class("AppWrapper");
 	}
 
 	/**
@@ -70,7 +79,6 @@ public class AppWrapperGenerator {
 		if (appWrapper != null) {
 			return appWrapper;
 		}
-		appWrapper = jp != null ? jp._class(JMod.ABSTRACT | JMod.PUBLIC, "AppWrapper") : jc._class("AppWrapper");
 
 		podioDateTimeFormatter = appWrapper.field(JMod.PROTECTED | JMod.STATIC | JMod.FINAL, SimpleDateFormat.class,
 				"PODIO_DATE_TIME_FORMATTER", JExpr.direct("new SimpleDateFormat(\"yyyy-MM-dd HH:mm:ss\")"));
@@ -84,35 +92,10 @@ public class AppWrapperGenerator {
 		cond._then()._return(podioDateFormatter.invoke("parse").arg(formatDateParam));
 		cond._else()._return(podioDateTimeFormatter.invoke("parse").arg(formatDateParam));
 
-		originalItem = CodeGenerator.addMember(appWrapper, "OriginalItem", jc.ref(Item.class),
-				"Stores the original item, as retrieved by java-podio api.", jc);
-		podioId = CodeGenerator.addMember(appWrapper, "PodioId", jc.ref(Integer.class),
-				"This represents the internal Podio id of the item.", jc);
-		podioRevision = CodeGenerator.addMember(appWrapper, "PodioRevision", jc.ref(Integer.class),
-				"This represents the internal Podio revision of the item.", jc);
-
-		getAppId = appWrapper.method(JMod.ABSTRACT | JMod.PUBLIC, Integer.class, "getAppId");
+		getAppId = appWrapper.method(JMod.PUBLIC, Integer.class, "getAppId");
 		getAppExternalId = appWrapper.method(JMod.ABSTRACT | JMod.PUBLIC, String.class, "getAppExternalId");
-		appWrapper
-				.method(JMod.ABSTRACT | JMod.PUBLIC, ItemCreate.class, "getItemCreate")
-				.javadoc()
-				.add("As {@link ItemCreate} inherits from {@link ItemUpdate} this method can be used to generate updates!");
 
-		setValues = appWrapper.method(JMod.PUBLIC, jc.VOID, "setValue")._throws(ParseException.class);
-		setValues.javadoc()
-				.add("Fills this objects values from {@code item}.<br>Subclasses should extend this method!");
-		JVar item = setValues.param(Item.class, "item");
-		setValues.javadoc().addParam(item);
-		setValues.javadoc().addThrows(ParseException.class);
-		setValues.body().invoke(originalItem.getSetter()).arg(item);
-
-		// public FieldValuesUpdate getFieldValuesUpdate(Date date) {
-		// HashMap<String, String> dateHashMap = new HashMap<String, String>(2);
-		// dateHashMap.put("start", podioDateFormat.format(date));
-		// dateHashMap.put("end", podioDateFormat.format(date));
-		// return new FieldValuesUpdate("datum", dateHashMap);
-		// }
-
+		// static getFieldValuesUpdate:
 		getFieldValuesUpdateFromDate = appWrapper.method(JMod.PUBLIC | JMod.STATIC, FieldValuesUpdate.class,
 				"getFieldValuesUpdate");
 		JVar date = getFieldValuesUpdateFromDate.param(Date.class, "date");
@@ -131,32 +114,54 @@ public class AppWrapperGenerator {
 		return appWrapper;
 	}
 
-	public JMember getOriginalItem() throws JClassAlreadyExistsException {
-		if (originalItem == null) {
-			getAppWrapperClass();
+	public JMethod _setValue() {
+		if (_setValue == null) {
+			_setValue = appWrapper.method(JMod.PUBLIC, jc.VOID, "setValue")._throws(ParseException.class);
+			_setValue.javadoc().add(
+					"Fills this objects values from {@code item}.<br>Subclasses should extend this method!");
+			JVar item = _setValue.param(Item.class, "item");
+			_setValue.javadoc().addParam(item);
+			_setValue.javadoc().addThrows(ParseException.class);
+			_setValue.body().invoke(_originalItem().getSetter()).arg(item);
+			_setValue.body().assign(_podioId().getField(), item.invoke("getId"));
+			_setValue.body().assign(_podioRevision().getField(),
+					item.invoke("getCurrentRevision").invoke("getRevision"));
+			_setValue.body().assign(_podioTitle().getField(), item.invoke("getTitle"));
+			_setValue.body().assign(_podioTags().getField(), item.invoke("getTags"));
 		}
-		return originalItem;
+		return _setValue;
 	}
 
-	public JMember getPodioId() throws JClassAlreadyExistsException {
-		if (podioId == null) {
-			getAppWrapperClass();
+	public JMember _originalItem() {
+		if (_originalItem == null) {
+			_originalItem = CodeGenerator.addMember(appWrapper, "OriginalItem", jc.ref(Item.class),
+					"Stores the original item, as retrieved by java-podio api.", jc);
 		}
-		return podioId;
+		return _originalItem;
 	}
 
-	public JMember getPodioRevision() throws JClassAlreadyExistsException {
-		if (podioRevision == null) {
-			getAppWrapperClass();
+	public JMember _podioId() {
+		if (_podioId == null) {
+			_podioId = CodeGenerator.addMember(appWrapper, "PodioId", jc.ref(Integer.class),
+					"This represents the internal Podio id of the item.", jc);
 		}
-		return podioRevision;
+		return _podioId;
 	}
 
-	public JMethod getSetValues() throws JClassAlreadyExistsException {
-		if (setValues == null) {
-			getAppWrapperClass();
+	public JMember _podioRevision() {
+		if (_podioRevision == null) {
+			_podioRevision = CodeGenerator.addMember(appWrapper, "PodioRevision", jc.ref(Integer.class),
+					"This represents the internal Podio revision of the item.", jc);
 		}
-		return setValues;
+		return _podioRevision;
+	}
+
+	public JMember _podioTitle() {
+		if (_podioTitle == null) {
+			_podioTitle = CodeGenerator.addMember(appWrapper, "PodioTitle", jc.ref(String.class),
+					"This represents the Podio title of the item.", jc);
+		}
+		return _podioTitle;
 	}
 
 	public JFieldVar getPodioDateTimeFormatter() throws JClassAlreadyExistsException {
@@ -185,6 +190,36 @@ public class AppWrapperGenerator {
 			getAppWrapperClass();
 		}
 		return getAppId;
+	}
+
+	public JMember _podioTags() {
+		if (_podioTags == null) {
+			_podioTags = CodeGenerator.addMember(appWrapper, "PodioTags", jc.ref(List.class).narrow(String.class),
+					"This represents the Podio tags of the item.", jc);
+		}
+		return _podioTags;
+	}
+
+	public JMethod _getItemCreate() {
+		if (_getItemCreate == null) {
+			_getItemCreate = appWrapper.method(JMod.PUBLIC, ItemCreate.class, "getItemCreate");
+			_getItemCreate
+					.javadoc()
+					.add("As {@link ItemCreate} inherits from {@link ItemUpdate} this method can be used to generate updates!");
+			JVar _itemCreateResult = _getItemCreate.body().decl(jc.ref(ItemCreate.class), "result",
+					JExpr._new(jc.ref(ItemCreate.class)));
+			_getItemCreate.body().add(_itemCreateResult.invoke("setExternalId").arg(JExpr.invoke(getAppExternalId)));
+			_getItemCreate.body().add(
+					_itemCreateResult.invoke("setRevision").arg(JExpr.invoke(_podioRevision().getGetter())));
+			_getItemCreate.body()
+					.add(_itemCreateResult.invoke("setTitle").arg(JExpr.invoke(_podioTitle().getGetter())));
+			_getItemCreate.body().add(_itemCreateResult.invoke("setTags").arg(JExpr.invoke(_podioTags().getGetter())));
+			JVar fieldValuesList = _getItemCreate.body().decl(jc.ref(List.class).narrow(FieldValuesUpdate.class),
+					"fieldValuesList", JExpr._new(jc.ref(ArrayList.class).narrow(FieldValuesUpdate.class)));
+			_getItemCreate.body().add(_itemCreateResult.invoke("setFields").arg(fieldValuesList));
+			_getItemCreate.body()._return(_itemCreateResult);
+		}
+		return _getItemCreate;
 	}
 
 	public JMethod getFieldValuesUpdateFromDate() throws JClassAlreadyExistsException {
