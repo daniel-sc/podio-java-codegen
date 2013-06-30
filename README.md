@@ -1,4 +1,5 @@
 podio-java-codegen
 ==================
 
-Maven code generation plugin, that automatically creates Java (wrapper) classes for any given Podio app. Any class should include corresponding from/to Item mappers.
+Tool, that automatically creates Java (wrapper) classes for any given Podio app. Any class should include corresponding from/to Item mappers.
+(Eventually this wants to be a maven plugin.)
