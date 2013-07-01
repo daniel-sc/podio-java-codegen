@@ -62,7 +62,6 @@ public class AppWrapperGenerator {
 	public AppWrapperGenerator(JCodeModel jCodeModel, JPackage jp) throws JClassAlreadyExistsException {
 		this.jc = jCodeModel;
 		appWrapper = jp != null ? jp._class(JMod.ABSTRACT | JMod.PUBLIC, "AppWrapper") : jc._class("AppWrapper");
-		CodeGenerator.addToString(appWrapper, jc);
 
 		// assure all relevant fields/methods are actually created:
 		_setValue();
@@ -73,6 +72,8 @@ public class AppWrapperGenerator {
 		_podioId();
 		_podioTitle();
 		_podioTags();
+
+		CodeGenerator.addToString(appWrapper, jc);
 	}
 
 	/**
