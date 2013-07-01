@@ -17,15 +17,21 @@ package com.podio.codegen;
  */
 
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import com.java_podio.code_gen.CodeGenMain;
+import com.sun.codemodel.JClassAlreadyExistsException;
 
-@Mojo(name = "generate-sources", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+
+@Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class PodioCodeGenMojo extends AbstractMojo {
 	
 	@Parameter(required=true)
@@ -38,23 +44,38 @@ public class PodioCodeGenMojo extends AbstractMojo {
 	private Integer spaceId;
 	
 	@Parameter
-	private Integer[] appIds;
+	private List<Integer> appIds;
 	
 	@Parameter(defaultValue="podio.generated")
 	private String basePackage;
 	
-	@Parameter(defaultValue = "${project.build.directory}", required = true)
+	@Parameter(defaultValue = "${project.build.sourceDirectory}", required = true)
 	private File outputDirectory;
 
-	public void execute() throws MojoExecutionException {
-		File f = outputDirectory;
-
-		if (!f.exists()) {
-			f.mkdirs();
+	public void execute() throws MojoExecutionException, MojoFailureException {
+		if (!outputDirectory.exists()) {
+			outputDirectory.mkdirs();
 		}
 
-
-//			throw new MojoExecutionException("Error creating file " + touch, e);
-
+		getLog().debug("user="+user);
+		getLog().debug("password="+password);
+		getLog().debug("spaceId="+spaceId);
+		getLog().debug("appIds="+appIds);
+		getLog().debug("basePackage="+basePackage);
+		getLog().debug("outputDirectory="+outputDirectory.toString());
+		
+		try {
+			if(spaceId!=null && spaceId>0) {
+				CodeGenMain.generateSpace(user, password, spaceId, outputDirectory, basePackage);
+			} else if (appIds!=null && appIds.size()>0 ) {
+				CodeGenMain.generateApps(user, password, appIds, outputDirectory, basePackage);
+			} else {
+				throw new MojoFailureException("Must provide either spaceId or appIds!");
+			}
+		} catch (JClassAlreadyExistsException e) {
+			throw new MojoExecutionException("Error: duplicate classes!", e);
+		} catch (IOException e) {
+			throw new MojoExecutionException("Error: could not write classes!", e);
+		}
 	}
 }
