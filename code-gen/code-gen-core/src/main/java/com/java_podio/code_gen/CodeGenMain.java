@@ -30,29 +30,55 @@ public class CodeGenMain {
 
 		String username = args[0];
 		String password = args[1];
-		OAuthUsernameCredentials usercredentials = new OAuthUsernameCredentials(username, password);
 
-		FetchAppInfo appInfo = new FetchAppInfo(usercredentials);
-		List<Application> appInfos = new ArrayList<Application>();
 		if ("-space".equalsIgnoreCase(args[2])) {
-			appInfos.addAll(appInfo.fetchAppsForSpace(Integer.parseInt(args[3])));
+			generateSpace(username, password, Integer.parseInt(args[3]), new File("."), "podio.generated");
 		} else {
 			List<Integer> appIds = new ArrayList<Integer>();
 			for (int i = 2; i < args.length; i++) {
 				appIds.add(Integer.parseInt(args[i]));
 			}
+			generateApps(username, password, appIds, new File("."), "podio.generated");
+		}
+	}
 
-			// fetch app info:
-			// TODO fetching can be parallelized for speed optimization:
-			for (Integer appId : appIds) {
-				appInfos.add(appInfo.fetchApp(appId));
-			}
+	public static void generateSpace(String user, String password, Integer spaceId, File outputFolder, String basePackage) throws JClassAlreadyExistsException, IOException {
+		OAuthUsernameCredentials usercredentials = new OAuthUsernameCredentials(user, password);
+
+		FetchAppInfo appInfo = new FetchAppInfo(usercredentials);
+		List<Application> appInfos = new ArrayList<Application>();
+		appInfos.addAll(appInfo.fetchAppsForSpace(spaceId));
+
+		generateSources(outputFolder, basePackage, appInfos);
+	}
+
+	public static void generateApps(String user, String password, List<Integer> appIds, File outputFolder, String basePackage) throws JClassAlreadyExistsException, IOException {
+		OAuthUsernameCredentials usercredentials = new OAuthUsernameCredentials(user, password);
+
+		FetchAppInfo appInfo = new FetchAppInfo(usercredentials);
+		List<Application> appInfos = new ArrayList<Application>();
+
+		// fetch app info:
+		// TODO fetching can be parallelized for speed optimization:
+		for (Integer appId : appIds) {
+			appInfos.add(appInfo.fetchApp(appId));
 		}
 
+		generateSources(outputFolder, basePackage, appInfos);
+	}
+
+	/**
+	 * @param outputFolder
+	 * @param basePackage
+	 * @param appInfos
+	 * @throws JClassAlreadyExistsException
+	 * @throws IOException
+	 */
+	static void generateSources(File outputFolder, String basePackage, List<Application> appInfos) throws JClassAlreadyExistsException, IOException {
 		// generate code:
-		CodeGenerator codeGen = new CodeGenerator("podio.generated");
+		CodeGenerator codeGen = new CodeGenerator(basePackage);
 		JCodeModel jCodeModel = codeGen.generateCode(appInfos);
-		jCodeModel.build(new File("."));
+		jCodeModel.build(outputFolder);
 	}
 
 }
