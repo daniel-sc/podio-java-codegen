@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <plugins>
+    <plugin>
+      <name>podio-codegen-maven-plugin</name>
+      <prefix>podio-codegen-maven-plugin</prefix>
+      <artifactId>podio-codegen-maven-plugin</artifactId>
+    </plugin>
+  </plugins>
+</metadata>
