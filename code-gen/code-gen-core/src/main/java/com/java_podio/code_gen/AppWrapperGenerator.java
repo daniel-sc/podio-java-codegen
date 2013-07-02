@@ -73,7 +73,7 @@ public class AppWrapperGenerator {
 		_podioTitle();
 		_podioTags();
 
-		CodeGenerator.addToString(appWrapper, jc);
+		CodeGenerator.addToString(appWrapper, jc, false);
 	}
 
 	/**

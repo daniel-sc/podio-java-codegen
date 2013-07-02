@@ -155,16 +155,30 @@ public class CodeGenerator {
 
 	}
 
-	public static void addToString(JDefinedClass jclass, JCodeModel jCodeModel) {
+	/**
+	 * Adds a toString method, printing out all non-static field variables.
+	 * 
+	 * @param jclass
+	 * @param jCodeModel
+	 * @param includeSuperToString
+	 *            if {@code true} the output is preceeded by super.toString() result.
+	 */
+	public static void addToString(JDefinedClass jclass, JCodeModel jCodeModel, boolean includeSuperToString) {
+		boolean first = true;
 		JMethod toString = jclass.method(JMod.PUBLIC, jCodeModel.ref(String.class), "toString");
-		JVar result = toString.body().decl(jCodeModel.ref(String.class), "result", JExpr._super().invoke("toString"));
-		for(JFieldVar jvar : jclass.fields().values()) {
-			if((jvar.mods().getValue() & JMod.STATIC) == JMod.STATIC) {
+		JVar result = toString.body().decl(jCodeModel.ref(String.class), "result", JExpr.lit(jclass.name() + " ["));
+		if (includeSuperToString) {
+			toString.body().assignPlus(result, JExpr._super().invoke("toString"));
+			first = false;
+		} 
+		for (JFieldVar jvar : jclass.fields().values()) {
+			if ((jvar.mods().getValue() & JMod.STATIC) == JMod.STATIC) {
 				continue;
 			}
-			toString.body().assignPlus(result, JExpr.lit(", "+jvar.name()+"=").plus(jvar));
+			toString.body().assignPlus(result, JExpr.lit((first ? "" : ", ") + jvar.name() + "=").plus(jvar));
+			first = false;
 		}
-		toString.body()._return(result);
+		toString.body()._return(result.plus(JExpr.lit("]")));
 	}
 
 }
