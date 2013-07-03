@@ -148,7 +148,7 @@ public class AppGenerator {
 
 			JClass javaType = getType(type, f);
 			JMember field = CodeGenerator.addMember(jc, name, javaType, javadoc, jCodeModel,
-					"deleted".equalsIgnoreCase(f.getStatus()));
+					com.podio.app.ApplicationFieldStatus.DELETED.equals(f.getStatus()));
 
 			// add setValuesFromItem part:
 			JCase jcase = setValuesFromItemSwitch._case(JExpr.lit(f.getId()));
