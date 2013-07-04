@@ -175,6 +175,7 @@ public class AppGenerator {
 		}
 
 		_setValue = jc.method(JMod.PUBLIC, jCodeModel.VOID, appWrapperGenerator._setValue().name());
+		_setValue.annotate(SuppressWarnings.class).param("value", "unchecked");
 		JVar setValuesFromItemParam = _setValue.param(Item.class,
 				CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, "item"));
 		_setValue.body().add((JExpr._super().invoke(appWrapperGenerator._setValue()).arg(setValuesFromItemParam)));
