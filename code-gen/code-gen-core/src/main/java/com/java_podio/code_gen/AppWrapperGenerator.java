@@ -53,7 +53,7 @@ public class AppWrapperGenerator {
 
 	private JFieldVar _PODIO_DATE_FORMATTER;
 
-	private JMethod _formatDate;
+	private JMethod _parseDate;
 
 	private JMethod _getItemCreate;
 
@@ -206,6 +206,8 @@ public class AppWrapperGenerator {
 			_getFieldValuesUpdateFromDate = appWrapper.method(JMod.PUBLIC | JMod.STATIC, FieldValuesUpdate.class,
 					"getFieldValuesUpdate");
 			JVar date = _getFieldValuesUpdateFromDate.param(Date.class, "date");
+			JVar externalId = _getFieldValuesUpdateFromDate.param(String.class, "externalId");
+			
 			JVar dateHashMap = _getFieldValuesUpdateFromDate.body().decl(
 					jc.ref(HashMap.class).narrow(String.class, String.class), "dateHashMap",
 					JExpr._new(jc.ref(HashMap.class).narrow(String.class, String.class)));
@@ -215,21 +217,21 @@ public class AppWrapperGenerator {
 			_getFieldValuesUpdateFromDate.body().add(
 					dateHashMap.invoke("put").arg("end").arg(_PODIO_DATE_TIME_FORMATTER().invoke("format").arg(date)));
 			_getFieldValuesUpdateFromDate.body()._return(
-					JExpr._new(jc.ref(FieldValuesUpdate.class)).arg("datum").arg(dateHashMap));
+					JExpr._new(jc.ref(FieldValuesUpdate.class)).arg(externalId).arg(dateHashMap));
 		}
 		return _getFieldValuesUpdateFromDate;
 	}
 
-	public JMethod _formatDate() {
-		if (_formatDate == null) {
-			_formatDate = appWrapper.method(JMod.PUBLIC | JMod.STATIC, jc.ref(Date.class), "formatDate")._throws(
+	public JMethod _parseDate() {
+		if (_parseDate == null) {
+			_parseDate = appWrapper.method(JMod.PUBLIC | JMod.STATIC, jc.ref(Date.class), "parseDate")._throws(
 					jc.ref(ParseException.class));
-			JVar formatDateParam = _formatDate.param(jc.ref(String.class), "dateOrDateTime");
-			JConditional cond = _formatDate.body()._if(formatDateParam.invoke("length").lte(JExpr.lit(10)));
+			JVar formatDateParam = _parseDate.param(jc.ref(String.class), "dateOrDateTime");
+			JConditional cond = _parseDate.body()._if(formatDateParam.invoke("length").lte(JExpr.lit(10)));
 			cond._then()._return(_PODIO_DATE_FORMATTER().invoke("parse").arg(formatDateParam));
 			cond._else()._return(_PODIO_DATE_TIME_FORMATTER().invoke("parse").arg(formatDateParam));
 		}
-		return _formatDate;
+		return _parseDate;
 	}
 
 }

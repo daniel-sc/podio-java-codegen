@@ -1,7 +1,6 @@
 package com.java_podio.code_gen;
 
 import java.text.ParseException;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.base.CaseFormat;
@@ -104,12 +103,11 @@ public class AppGenerator {
 
 		String className = JavaNames.createValidJavaTypeName(app.getConfiguration().getName(), jp.name());
 		jc = jp._class(className)._extends(appWrapperGenerator.getAppWrapperClass());
-		
+
 		_setValue = null;
 		_setValue = _setValue();
 		_getItemCreate = null;
 		_getItemCreate = _getItemCreate();
-
 
 		enumGenerator = new EnumGenerator(jCodeModel, jp.subPackage(CaseFormat.UPPER_CAMEL.to(
 				CaseFormat.LOWER_UNDERSCORE, className)));
@@ -135,7 +133,7 @@ public class AppGenerator {
 		JVar constructorFromItemParam = constructorFromItem.param(Item.class,
 				CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, className) + "Item");
 		constructorFromItem.body().invoke(_setValue()).arg(constructorFromItemParam);
-		
+
 		for (ApplicationField f : app.getFields()) {
 			String name = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, f.getExternalId().toLowerCase());
 			PodioType type = PodioType.forApplicationField(f);
@@ -163,7 +161,7 @@ public class AppGenerator {
 				cond._then().add(_itemCreateFieldValues.invoke("add").arg(fieldValueUpdate));
 			}
 		}
-		
+
 		_getItemCreate().body()._return(itemCreateResult);
 
 		CodeGenerator.addToString(jc, jCodeModel, true);
@@ -199,14 +197,16 @@ public class AppGenerator {
 			return _getItemCreate;
 		}
 		// getItemCreate method:
-		_getItemCreate = jc.method(JMod.PUBLIC, jCodeModel._ref(ItemCreate.class), appWrapperGenerator._getItemCreate().name());
+		_getItemCreate = jc.method(JMod.PUBLIC, jCodeModel._ref(ItemCreate.class), appWrapperGenerator._getItemCreate()
+				.name());
 		itemCreateResult = _getItemCreate.body().decl(jCodeModel.ref(ItemCreate.class), "result",
 				JExpr._super().invoke(appWrapperGenerator._getItemCreate()));
 		_itemCreateFieldValues = _getItemCreate.body().decl(jCodeModel.ref(List.class).narrow(FieldValuesUpdate.class),
 				"fieldValuesList", itemCreateResult.invoke("getFields"));
 
-		//as statements are added later, the return statement has to be added later as well!
-//		_getItemCreate.body()._return(itemCreateResult);
+		// as statements are added later, the return statement has to be added
+		// later as well!
+		// _getItemCreate.body()._return(itemCreateResult);
 
 		return _getItemCreate;
 
@@ -280,14 +280,11 @@ public class AppGenerator {
 		case APP:
 			// fieldValuesList.add(new FieldValuesUpdate("extid", "value",
 			// Collections.singletonMap("item_id", getKunde())));
-			return JExpr
-					._new(jCodeModel.ref(FieldValuesUpdate.class))
-					.arg(f.getExternalId())
-					.arg("value")
-					.arg(jCodeModel.ref(Collections.class).staticInvoke("singletonMap").arg("item_id")
-							.arg(JExpr.invoke(getter)));
+			return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value")
+					.arg(JExpr.invoke(getter));
 		case DATE:
-			return JExpr.invoke(appWrapperGenerator._getFieldValuesUpdateFromDate()).arg(JExpr.invoke(getter));
+			return JExpr.invoke(appWrapperGenerator._getFieldValuesUpdateFromDate()).arg(JExpr.invoke(getter))
+					.arg(f.getExternalId());
 		default:
 			return null;
 		}
@@ -351,7 +348,7 @@ public class AppGenerator {
 		constructorFromItem._throws(ParseException.class);
 		JExpression exp = createGetStringFieldValue(jVar, "start_date", jCodeModel);
 		// 2011-12-31 11:27:10
-		return JExpr.invoke(appWrapperGenerator._formatDate()).arg(exp);
+		return JExpr.invoke(appWrapperGenerator._parseDate()).arg(exp);
 	}
 
 	/**
