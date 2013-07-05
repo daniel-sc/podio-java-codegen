@@ -5,11 +5,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.podio.item.FieldValuesUpdate;
+import com.podio.item.FieldValuesView;
 import com.podio.item.Item;
 import com.podio.item.ItemCreate;
+import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
 import com.sun.codemodel.JConditional;
@@ -20,6 +24,7 @@ import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JVar;
+import com.sun.codemodel.JWhileLoop;
 
 /**
  * Generates a (single) AppWrapper abstract class - the super class of all app
@@ -51,9 +56,13 @@ public class AppWrapperGenerator {
 
 	private JMethod _getFieldValuesUpdateFromDate;
 
+	private JMethod _getFieldValuesUpdateFromApp;
+
 	private JFieldVar _PODIO_DATE_FORMATTER;
 
 	private JMethod _parseDate;
+
+	private JMethod _parseAppField;
 
 	private JMethod _getItemCreate;
 
@@ -201,13 +210,40 @@ public class AppWrapperGenerator {
 		return _getItemCreate;
 	}
 
+	public JMethod _getFieldValuesUpdateFromApp() {
+		// fieldValuesList.add(new FieldValuesUpdate("extid", "value",
+		// Collections.singletonMap("item_id", getKunde())));
+		// List<Map<String, Map<String, Integer>>>
+		if (_getFieldValuesUpdateFromApp == null) {
+			_getFieldValuesUpdateFromApp = appWrapper.method(JMod.PUBLIC | JMod.STATIC, FieldValuesUpdate.class,
+					"getFieldValuesUpdateFromApp");
+			JVar ids = _getFieldValuesUpdateFromApp.param(jc.ref(List.class).narrow(Integer.class), "ids");
+			JVar externalId = _getFieldValuesUpdateFromApp.param(String.class, "externalId");
+
+			_getFieldValuesUpdateFromApp.body()._if(ids.eq(JExpr._null()))._then()._return(JExpr._null());
+
+			JClass valueType = jc.ref(Map.class).narrow(jc.ref(String.class), jc.ref(Object.class).wildcard());
+
+			JVar idsList = _getFieldValuesUpdateFromApp.body().decl(jc.ref(ArrayList.class).narrow(valueType),
+					"values", JExpr._new(jc.ref(ArrayList.class).narrow(valueType)));
+
+			_getFieldValuesUpdateFromApp.body().directStatement(
+					"for(Integer id : " + ids.name() + "){\n" + idsList.name()
+							+ ".add(java.util.Collections.singletonMap(\"item_id\", id));\n}");
+
+			_getFieldValuesUpdateFromApp.body()._return(
+					JExpr._new(jc.ref(FieldValuesUpdate.class)).arg(externalId).arg(idsList));
+		}
+		return _getFieldValuesUpdateFromApp;
+	}
+
 	public JMethod _getFieldValuesUpdateFromDate() {
 		if (_getFieldValuesUpdateFromDate == null) {
 			_getFieldValuesUpdateFromDate = appWrapper.method(JMod.PUBLIC | JMod.STATIC, FieldValuesUpdate.class,
-					"getFieldValuesUpdate");
+					"getFieldValuesUpdateFromDate");
 			JVar date = _getFieldValuesUpdateFromDate.param(Date.class, "date");
 			JVar externalId = _getFieldValuesUpdateFromDate.param(String.class, "externalId");
-			
+
 			JVar dateHashMap = _getFieldValuesUpdateFromDate.body().decl(
 					jc.ref(HashMap.class).narrow(String.class, String.class), "dateHashMap",
 					JExpr._new(jc.ref(HashMap.class).narrow(String.class, String.class)));
@@ -234,4 +270,38 @@ public class AppWrapperGenerator {
 		return _parseDate;
 	}
 
+	public JMethod _parseAppField() {
+		// return
+		// JExpr.direct("((java.util.Map<String, java.util.Map<String, Integer>>) "
+		// + jVar.name()
+		// + ".getValues().get(0)).get(\"value\").get(\"item_id\")");
+		if (_parseAppField == null) {
+			_parseAppField = appWrapper.method(JMod.PUBLIC | JMod.STATIC, jc.ref(List.class).narrow(Integer.class),
+					"parseAppField")._throws(jc.ref(ParseException.class));
+			_parseAppField.javadoc().addReturn().add("a list of referenced item ids");
+			JVar parseAppParam = _parseAppField.param(jc.ref(FieldValuesView.class), "fieldValue");
+			JVar result = _parseAppField.body().decl(jc.ref(List.class).narrow(Integer.class), "result",
+					JExpr._new(jc.ref(ArrayList.class).narrow(Integer.class)));
+			JClass entryType = jc.ref(Map.class).narrow(jc.ref(String.class), jc.ref(Object.class).wildcard());
+			JClass entriesType = jc.ref(List.class).narrow(entryType);
+			JVar entries = _parseAppField.body().decl(entriesType, "entries");
+			_parseAppField.body().assign(entries, JExpr.cast(entriesType, parseAppParam.invoke("getValues")));
+			JVar iJVar = _parseAppField.body().decl(jc.ref(Iterator.class).narrow(entryType), "iterator",
+					entries.invoke("iterator"));
+			JWhileLoop loop = _parseAppField.body()._while(iJVar.invoke("hasNext"));
+			JVar value = loop.body().decl(
+					jc.ref(Integer.class),
+					"value",
+					JExpr.cast(jc.ref(Integer.class),
+							JExpr.invoke(JExpr.cast(entryType, iJVar.invoke("next").invoke("get").arg("value")), "get")
+									.arg("item_id")));
+			// JExpr.cast(entryType,
+			// JExpr.invoke(iJVar,"next")/*.invoke("get").arg("value")*/).invoke("get").arg("item_id"));
+			loop.body()._if(value.ne(JExpr._null()))._then()
+					.add(result.invoke("add").arg(value));
+
+			_parseAppField.body()._return(result);
+		}
+		return _parseAppField;
+	}
 }

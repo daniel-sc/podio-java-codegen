@@ -236,6 +236,9 @@ public class AppGenerator {
 				result = jCodeModel.ref(Void.class);
 			}
 			break;
+		case APP:
+			result = jCodeModel.ref(List.class).narrow(Integer.class);
+			break;
 
 		default:
 			result = jCodeModel.ref(type.getJavaType());
@@ -279,10 +282,8 @@ public class AppGenerator {
 			return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value")
 					.arg(JExpr.invoke(getter).invoke("getPodioId"));
 		case APP:
-			// fieldValuesList.add(new FieldValuesUpdate("extid", "value",
-			// Collections.singletonMap("item_id", getKunde())));
-			return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value")
-					.arg(JExpr.invoke(getter));
+			return JExpr.invoke(appWrapperGenerator._getFieldValuesUpdateFromApp()).arg(JExpr.invoke(getter))
+					.arg(f.getExternalId());
 		case DATE:
 			return JExpr.invoke(appWrapperGenerator._getFieldValuesUpdateFromDate()).arg(JExpr.invoke(getter))
 					.arg(f.getExternalId());
@@ -326,8 +327,8 @@ public class AppGenerator {
 		case APP:
 			// ((Map<String, Map<String, Integer>>)
 			// field.getValues().get(0)).get("value").get("item_id")
-			return JExpr.direct("((java.util.Map<String, java.util.Map<String, Integer>>) " + jVar.name()
-					+ ".getValues().get(0)).get(\"value\").get(\"item_id\")");
+			return JExpr.invoke(appWrapperGenerator._parseAppField()).arg(jVar);
+
 		default:
 			System.out.println("WARNING: could not create getFieldValueExpression for type: " + type);
 			return JExpr._null();
