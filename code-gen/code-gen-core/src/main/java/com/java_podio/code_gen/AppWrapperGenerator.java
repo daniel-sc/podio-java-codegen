@@ -229,7 +229,7 @@ public class AppWrapperGenerator {
 
 			_getFieldValuesUpdateFromApp.body().directStatement(
 					"for(Integer id : " + ids.name() + "){\n" + idsList.name()
-							+ ".add(java.util.Collections.singletonMap(\"item_id\", id));\n}");
+							+ ".add(java.util.Collections.singletonMap(\"value\", id));\n}");
 
 			_getFieldValuesUpdateFromApp.body()._return(
 					JExpr._new(jc.ref(FieldValuesUpdate.class)).arg(externalId).arg(idsList));
