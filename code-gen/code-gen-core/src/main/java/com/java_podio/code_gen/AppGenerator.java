@@ -4,6 +4,8 @@ import java.text.ParseException;
 import java.util.List;
 
 import com.google.common.base.CaseFormat;
+import com.java_podio.code_gen.static_classes.AppWrapper;
+import com.java_podio.code_gen.static_classes.PodioCurrency;
 import com.podio.app.Application;
 import com.podio.app.ApplicationField;
 import com.podio.item.FieldValuesUpdate;
@@ -59,15 +61,9 @@ public class AppGenerator {
 	 */
 	private JVar _itemCreateFieldValues;
 
-	protected JDefinedClass currencyClass;
-
 	private EnumGenerator enumGenerator;
 
 	protected JPackage jp;
-
-	protected AppWrapperGenerator appWrapperGenerator;
-
-	protected CurrencyGenerator currencyGenerator;
 
 	/**
 	 * The generated app class.
@@ -80,13 +76,10 @@ public class AppGenerator {
 
 	private JVar itemCreateResult;
 
-	public AppGenerator(JCodeModel jCodeModel, JPackage jPackage, AppWrapperGenerator appWrapperGenerator,
-			CurrencyGenerator currencyGenerator) throws JClassAlreadyExistsException {
+	public AppGenerator(JCodeModel jCodeModel, JPackage jPackage)
+			throws JClassAlreadyExistsException {
 		this.jCodeModel = jCodeModel;
 		this.jp = jPackage;
-		this.appWrapperGenerator = appWrapperGenerator;
-		this.currencyGenerator = currencyGenerator;
-		this.currencyClass = currencyGenerator.getCurrencyClass();
 	}
 
 	/**
@@ -102,7 +95,7 @@ public class AppGenerator {
 		// CodeGenerator.printApp(app);
 
 		String className = JavaNames.createValidJavaTypeName(app.getConfiguration().getName(), jp.name());
-		jc = jp._class(className)._extends(appWrapperGenerator.getAppWrapperClass());
+		jc = jp._class(className)._extends(AppWrapper.class);
 
 		_setValue = null;
 		_setValue = _setValue();
@@ -174,11 +167,11 @@ public class AppGenerator {
 			return _setValue;
 		}
 
-		_setValue = jc.method(JMod.PUBLIC, jCodeModel.VOID, appWrapperGenerator._setValue().name());
+		_setValue = jc.method(JMod.PUBLIC, jCodeModel.VOID, "setValue");
 		_setValue.annotate(SuppressWarnings.class).param("value", "unchecked");
 		JVar setValuesFromItemParam = _setValue.param(Item.class,
 				CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, "item"));
-		_setValue.body().add((JExpr._super().invoke(appWrapperGenerator._setValue()).arg(setValuesFromItemParam)));
+		_setValue.body().add((JExpr._super().invoke("setValue").arg(setValuesFromItemParam)));
 		setValuesFromItemForEachField = _setValue.body().forEach(jCodeModel.ref(FieldValuesView.class), "field",
 				setValuesFromItemParam.invoke("getFields"));
 		setValuesFromItemSwitch = setValuesFromItemForEachField.body()._switch(
@@ -198,10 +191,9 @@ public class AppGenerator {
 			return _getItemCreate;
 		}
 		// getItemCreate method:
-		_getItemCreate = jc.method(JMod.PUBLIC, jCodeModel._ref(ItemCreate.class), appWrapperGenerator._getItemCreate()
-				.name());
+		_getItemCreate = jc.method(JMod.PUBLIC, jCodeModel._ref(ItemCreate.class), "getItemCreate");
 		itemCreateResult = _getItemCreate.body().decl(jCodeModel.ref(ItemCreate.class), "result",
-				JExpr._super().invoke(appWrapperGenerator._getItemCreate()));
+				JExpr._super().invoke("getItemCreate"));
 		_itemCreateFieldValues = _getItemCreate.body().decl(jCodeModel.ref(List.class).narrow(FieldValuesUpdate.class),
 				"fieldValuesList", itemCreateResult.invoke("getFields"));
 
@@ -217,7 +209,7 @@ public class AppGenerator {
 		JClass result;
 		switch (type) {
 		case MONEY:
-			result = currencyClass;
+			result = jCodeModel.ref(PodioCurrency.class);
 			break;
 		case CATEGORY_SINGLE:
 			String name = JavaNames.createValidJavaTypeName(f.getConfiguration().getLabel(), jp.name());
@@ -282,11 +274,9 @@ public class AppGenerator {
 			return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value")
 					.arg(JExpr.invoke(getter).invoke("getPodioId"));
 		case APP:
-			return JExpr.invoke(appWrapperGenerator._getFieldValuesUpdateFromApp()).arg(JExpr.invoke(getter))
-					.arg(f.getExternalId());
+			return JExpr.invoke("getFieldValuesUpdateFromApp").arg(JExpr.invoke(getter)).arg(f.getExternalId());
 		case DATE:
-			return JExpr.invoke(appWrapperGenerator._getFieldValuesUpdateFromDate()).arg(JExpr.invoke(getter))
-					.arg(f.getExternalId());
+			return JExpr.invoke("getFieldValuesUpdateFromDate").arg(JExpr.invoke(getter)).arg(f.getExternalId());
 		default:
 			return null;
 		}
@@ -327,7 +317,7 @@ public class AppGenerator {
 		case APP:
 			// ((Map<String, Map<String, Integer>>)
 			// field.getValues().get(0)).get("value").get("item_id")
-			return JExpr.invoke(appWrapperGenerator._parseAppField()).arg(jVar);
+			return JExpr.invoke("parseAppField").arg(jVar);
 
 		default:
 			System.out.println("WARNING: could not create getFieldValueExpression for type: " + type);
@@ -341,7 +331,7 @@ public class AppGenerator {
 	 * @return
 	 */
 	private JExpression createGetCurrencyFieldValue(JVar jVar) {
-		return JExpr._new(currencyClass).arg(createGetDoubleFieldValue(jVar))
+		return JExpr._new(jCodeModel.ref(PodioCurrency.class)).arg(createGetDoubleFieldValue(jVar))
 				.arg(createGetStringFieldValue(jVar, "currency", jCodeModel));
 	}
 
@@ -350,7 +340,7 @@ public class AppGenerator {
 		constructorFromItem._throws(ParseException.class);
 		JExpression exp = createGetStringFieldValue(jVar, "start_date", jCodeModel);
 		// 2011-12-31 11:27:10
-		return JExpr.invoke(appWrapperGenerator._parseDate()).arg(exp);
+		return JExpr.invoke("parseDate").arg(exp);
 	}
 
 	/**

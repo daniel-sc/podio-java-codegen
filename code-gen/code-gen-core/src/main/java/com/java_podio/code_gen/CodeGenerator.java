@@ -24,11 +24,7 @@ public class CodeGenerator {
 
 	JFieldVar podioDateFormatter;
 
-	CurrencyGenerator currencyGenerator;
-
 	private JPackage jBasePackage;
-
-	private AppWrapperGenerator appWrapperGenerator;
 
 	private AppGenerator appGenerator;
 
@@ -42,11 +38,7 @@ public class CodeGenerator {
 			printApp(application);
 		}
 
-		currencyGenerator = new CurrencyGenerator(jCodeModel, jBasePackage);
-
-		appWrapperGenerator = new AppWrapperGenerator(jCodeModel, jBasePackage);
-
-		appGenerator = new AppGenerator(jCodeModel, jBasePackage, appWrapperGenerator, currencyGenerator);
+		appGenerator = new AppGenerator(jCodeModel, jBasePackage);
 
 		for (Application app : appInfos) {
 			appGenerator.getAppClass(app);
@@ -65,7 +57,8 @@ public class CodeGenerator {
 	 * @param javadoc
 	 * @param jCodeModel
 	 * @return
-	 * @see #addMember(JDefinedClass, String, JType, String, JCodeModel, boolean)
+	 * @see #addMember(JDefinedClass, String, JType, String, JCodeModel,
+	 *      boolean)
 	 */
 	public static JMember addMember(JDefinedClass jc, String name, JType type, String javadoc, JCodeModel jCodeModel) {
 		return addMember(jc, name, type, javadoc, jCodeModel, false);
@@ -79,14 +72,18 @@ public class CodeGenerator {
 	 *            of field in upper camel case
 	 * @param type
 	 * @param javadoc
-	 *            is added to variable, setter and getter. Might be {@code null} .
+	 *            is added to variable, setter and getter. Might be {@code null}
+	 *            .
 	 * @param jCodeModel
 	 * @param isDeleted
-	 *            if set to {@code true}, the elements are annotated with {@link Deprecated} and a corresponding javadoc comment is added.
+	 *            if set to {@code true}, the elements are annotated with
+	 *            {@link Deprecated} and a corresponding javadoc comment is
+	 *            added.
 	 * @return a reference to the field and its getter and setter
 	 * @see CaseFormat#UPPER_CAMEL
 	 */
-	public static JMember addMember(JDefinedClass jc, String name, JType type, String javadoc, JCodeModel jCodeModel, boolean isDeleted) {
+	public static JMember addMember(JDefinedClass jc, String name, JType type, String javadoc, JCodeModel jCodeModel,
+			boolean isDeleted) {
 		String nameLowerCamelCase = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name);
 
 		// add member:
@@ -141,12 +138,15 @@ public class CodeGenerator {
 		System.out.println("FieldIsRequired=" + appField.getConfiguration().isRequired());
 		if (appField.getConfiguration().getSettings() != null) {
 			System.out.println("FieldAllowedValues=" + appField.getConfiguration().getSettings().getAllowedValues());
-			System.out.println("FieldAllowedCurrencies=" + appField.getConfiguration().getSettings().getAllowedCurrencies());
+			System.out.println("FieldAllowedCurrencies="
+					+ appField.getConfiguration().getSettings().getAllowedCurrencies());
 			System.out.println("FieldMultiple=" + appField.getConfiguration().getSettings().getMultiple());
-			System.out.println("FieldReferenceableTypes=" + appField.getConfiguration().getSettings().getReferenceableTypes());
+			System.out.println("FieldReferenceableTypes="
+					+ appField.getConfiguration().getSettings().getReferenceableTypes());
 			if (appField.getConfiguration().getSettings().getOptions() != null) {
 				for (CategoryOption option : appField.getConfiguration().getSettings().getOptions()) {
-					System.out.println("FieldOption: " + option.getId() + ", " + option.getText() + ", " + option.getStatus());
+					System.out.println("FieldOption: " + option.getId() + ", " + option.getText() + ", "
+							+ option.getStatus());
 				}
 			}
 			System.out.println("FieldTextFieldSize=" + appField.getConfiguration().getSettings().getSize());
@@ -161,7 +161,8 @@ public class CodeGenerator {
 	 * @param jclass
 	 * @param jCodeModel
 	 * @param includeSuperToString
-	 *            if {@code true} the output is preceeded by super.toString() result.
+	 *            if {@code true} the output is preceeded by super.toString()
+	 *            result.
 	 */
 	public static void addToString(JDefinedClass jclass, JCodeModel jCodeModel, boolean includeSuperToString) {
 		boolean first = true;
@@ -170,7 +171,7 @@ public class CodeGenerator {
 		if (includeSuperToString) {
 			toString.body().assignPlus(result, JExpr._super().invoke("toString"));
 			first = false;
-		} 
+		}
 		for (JFieldVar jvar : jclass.fields().values()) {
 			if ((jvar.mods().getValue() & JMod.STATIC) == JMod.STATIC) {
 				continue;

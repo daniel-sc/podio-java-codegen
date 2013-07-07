@@ -1,13 +1,14 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>com.java-podio.code-gen</groupId>
-    <artifactId>code-gen</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-  </parent>
-  <artifactId>code-gen-core</artifactId>
-  <description>Code generator - includes a main class for using as command line tool</description>
-  	<build>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.java-podio.code-gen</groupId>
+		<artifactId>code-gen</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>code-gen-core</artifactId>
+	<description>Code generator - includes a main class for using as command line tool</description>
+	<build>
 		<plugins>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -35,11 +36,10 @@
 			</plugin>
 		</plugins>
 	</build>
-  	<dependencies>
+	<dependencies>
 		<dependency>
 			<groupId>com.podio</groupId>
 			<artifactId>api</artifactId>
-			<version>0.7.5-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.codemodel</groupId>
@@ -53,5 +53,9 @@
 			<!-- this is the last version compatible with Java 5: <version>11.0.2</version> -->
 		</dependency>
 
+		<dependency>
+			<groupId>com.java-podio.code-gen</groupId>
+			<artifactId>code-gen-static</artifactId>
+		</dependency>
 	</dependencies>
 </project>
