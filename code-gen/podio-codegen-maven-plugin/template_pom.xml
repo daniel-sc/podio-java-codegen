@@ -32,6 +32,11 @@
 			<artifactId>api</artifactId>
 			<version>0.7.5-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>com.java-podio.code-gen/groupId>
+			<artifactId>code-gen-static</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 <pluginRepositories>
