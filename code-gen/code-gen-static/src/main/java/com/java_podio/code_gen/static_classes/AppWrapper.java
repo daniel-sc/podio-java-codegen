@@ -1,10 +1,7 @@
 package com.java_podio.code_gen.static_classes;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -20,27 +17,26 @@ public abstract class AppWrapper {
 
 	/**
 	 * Stores the original item, as retrieved by java-podio api.
-	 * 
 	 */
 	protected Item originalItem;
+
 	/**
 	 * This represents the internal Podio id of the item.
-	 * 
 	 */
 	protected Integer podioId;
+
 	/**
 	 * This represents the internal Podio revision of the item.
-	 * 
 	 */
 	protected Integer podioRevision;
+
 	/**
 	 * This represents the Podio title of the item.
-	 * 
 	 */
 	protected String podioTitle;
+
 	/**
 	 * This represents the Podio tags of the item.
-	 * 
 	 */
 	protected List<String> podioTags;
 
@@ -48,9 +44,6 @@ public abstract class AppWrapper {
 	 * Uploaded/associated files.
 	 */
 	private List<File> files;
-
-	protected final static SimpleDateFormat PODIO_DATE_FORMATTER = (new SimpleDateFormat("yyyy-MM-dd"));
-	protected final static SimpleDateFormat PODIO_DATE_TIME_FORMATTER = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
 	/**
 	 * Fills this objects values from {@code item}.<br>
@@ -72,7 +65,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * Stores the original item, as retrieved by java-podio api.
-	 * 
 	 */
 	public Item getOriginalItem() {
 		return originalItem;
@@ -80,7 +72,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * Stores the original item, as retrieved by java-podio api.
-	 * 
 	 */
 	public void setOriginalItem(Item originalItem) {
 		this.originalItem = originalItem;
@@ -88,7 +79,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * This represents the internal Podio id of the item.
-	 * 
 	 */
 	public Integer getPodioId() {
 		return podioId;
@@ -96,7 +86,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * This represents the internal Podio id of the item.
-	 * 
 	 */
 	public void setPodioId(Integer podioId) {
 		this.podioId = podioId;
@@ -104,7 +93,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * This represents the internal Podio revision of the item.
-	 * 
 	 */
 	public Integer getPodioRevision() {
 		return podioRevision;
@@ -112,7 +100,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * This represents the internal Podio revision of the item.
-	 * 
 	 */
 	public void setPodioRevision(Integer podioRevision) {
 		this.podioRevision = podioRevision;
@@ -120,7 +107,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * This represents the Podio title of the item.
-	 * 
 	 */
 	public String getPodioTitle() {
 		return podioTitle;
@@ -128,7 +114,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * This represents the Podio title of the item.
-	 * 
 	 */
 	public void setPodioTitle(String podioTitle) {
 		this.podioTitle = podioTitle;
@@ -136,7 +121,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * This represents the Podio tags of the item.
-	 * 
 	 */
 	public List<String> getPodioTags() {
 		return podioTags;
@@ -144,7 +128,6 @@ public abstract class AppWrapper {
 
 	/**
 	 * This represents the Podio tags of the item.
-	 * 
 	 */
 	public void setPodioTags(List<String> podioTags) {
 		this.podioTags = podioTags;
@@ -163,8 +146,7 @@ public abstract class AppWrapper {
 	}
 
 	/**
-	 * Uploaded/associated files. For adding a (new) file see
-	 * {@link #addFileById(Integer)}.
+	 * Uploaded/associated files. For adding a (new) file see {@link #addFileById(Integer)}.
 	 * 
 	 * @param fileIds
 	 * @see #getFiles()
@@ -195,8 +177,7 @@ public abstract class AppWrapper {
 	}
 
 	/**
-	 * @return all ids of associated files. Is never {@code null} - even if
-	 *         {@link #files} is {@code null}.
+	 * @return all ids of associated files. Is never {@code null} - even if {@link #files} is {@code null}.
 	 * @see #setFiles(List)
 	 * @see #getFiles()
 	 * @see #addFileById(Integer)
@@ -212,9 +193,7 @@ public abstract class AppWrapper {
 	}
 
 	/**
-	 * As {@link ItemCreate} inherits from {@link ItemUpdate} this method can be
-	 * used to generate updates!
-	 * 
+	 * As {@link ItemCreate} inherits from {@link ItemUpdate} this method can be used to generate updates!
 	 */
 	public ItemCreate getItemCreate() {
 		ItemCreate result = new ItemCreate();
@@ -229,8 +208,8 @@ public abstract class AppWrapper {
 		}
 		List<FieldValuesUpdate> fieldValuesList = new ArrayList<FieldValuesUpdate>();
 		result.setFields(fieldValuesList);
-		
-		if(getFiles()!=null) { //getFiles()!=null indicates changed files..
+
+		if (getFiles() != null) { // getFiles()!=null indicates changed files..
 			result.setFileIds(getFileIds());
 		}
 
@@ -252,7 +231,6 @@ public abstract class AppWrapper {
 	}
 
 	/**
-	 * 
 	 * @return a list of referenced item ids
 	 */
 	public static List<Integer> parseAppField(FieldValuesView fieldValue) throws ParseException {
@@ -280,20 +258,4 @@ public abstract class AppWrapper {
 		}
 		return new FieldValuesUpdate(externalId, values);
 	}
-
-	public static Date parseDate(String dateOrDateTime) throws ParseException {
-		if (dateOrDateTime.length() <= 10) {
-			return PODIO_DATE_FORMATTER.parse(dateOrDateTime);
-		} else {
-			return PODIO_DATE_TIME_FORMATTER.parse(dateOrDateTime);
-		}
-	}
-
-	public static FieldValuesUpdate getFieldValuesUpdateFromDate(Date date, String externalId) {
-		HashMap<String, String> dateHashMap = new HashMap<String, String>();
-		dateHashMap.put("start", PODIO_DATE_TIME_FORMATTER.format(date));
-		dateHashMap.put("end", PODIO_DATE_TIME_FORMATTER.format(date));
-		return new FieldValuesUpdate(externalId, dateHashMap);
-	}
-
 }

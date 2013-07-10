@@ -1,10 +1,11 @@
 package com.java_podio.code_gen;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.java_podio.code_gen.static_classes.PodioCurrency;
+import com.java_podio.code_gen.static_classes.PodioDate;
 import com.podio.app.ApplicationField;
 import com.podio.app.ApplicationFieldType;
 
@@ -13,7 +14,7 @@ import com.podio.app.ApplicationFieldType;
  */
 public enum PodioType {
 
-	UNDEFINED(Object.class), TEXT(String.class), NUMBER(Double.class), MONEY(Double.class), CATEGORY_SINGLE(EnumGenerator.class), APP(List.class), DATE(Date.class);
+	UNDEFINED(Object.class), TEXT(String.class), NUMBER(Double.class), MONEY(PodioCurrency.class), CATEGORY_SINGLE(EnumGenerator.class), APP(List.class), DATE(PodioDate.class);
 
 	private final Class<? extends Object> javaType;
 

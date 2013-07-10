@@ -7,10 +7,10 @@ import java.util.HashMap;
 import java.util.Locale;
 import com.podio.item.FieldValuesUpdate;
 
-public class PodioCurrency {
+public class PodioCurrency implements PodioField {
 
-	protected Currency currency;
-	protected Double value;
+	private Currency currency;
+	private Double value;
 	public static NumberFormat currencyValueFormatter = DecimalFormat.getInstance(Locale.US);
 
 	static {
@@ -61,6 +61,9 @@ public class PodioCurrency {
 		this.value = value;
 	}
 
+	/* (non-Javadoc)
+	 * @see com.java_podio.code_gen.static_classes.PodioField#getFieldValuesUpdate(java.lang.String)
+	 */
 	public FieldValuesUpdate getFieldValuesUpdate(String externalId) {
 		HashMap<String, String> valueMap = new HashMap<String, String>();
 		valueMap.put("currency", getcurrency().getCurrencyCode());
