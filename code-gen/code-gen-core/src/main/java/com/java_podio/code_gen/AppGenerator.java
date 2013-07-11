@@ -302,8 +302,8 @@ public class AppGenerator {
 	private JExpression createGetDateFieldValue(JVar jVar) throws JClassAlreadyExistsException {
 		_setValue()._throws(ParseException.class);
 		constructorFromItem._throws(ParseException.class);
-		JExpression start = createGetStringFieldValue(jVar, "start_date", jCodeModel);
-		JExpression end = createGetStringFieldValue(jVar, "end_date", jCodeModel);
+		JExpression start = createGetStringFieldValue(jVar, "start", jCodeModel);
+		JExpression end = createGetStringFieldValue(jVar, "end", jCodeModel);
 		// 2011-12-31 11:27:10
 		return JExpr._new(jCodeModel.ref(PodioDate.class)).arg(start).arg(end);
 	}
