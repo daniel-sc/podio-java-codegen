@@ -127,6 +127,9 @@ public class AppGenerator {
 			if (type.equals(PodioType.UNDEFINED)) {
 				javadoc = javadoc == null ? FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC : javadoc + "\n" + FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC;
 			}
+			if (type.equals(PodioType.DURATION)) {
+				javadoc = javadoc == null ? "Duration in seconds." : javadoc + "\n" + "Duration in seconds.";
+			}
 
 			JClass javaType = getType(type, f);
 			JMember field = CodeGenerator.addMember(jc, name, javaType, javadoc, jCodeModel, com.podio.app.ApplicationFieldStatus.DELETED.equals(f.getStatus()));
@@ -233,6 +236,7 @@ public class AppGenerator {
 			case TEXT:
 				return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value").arg(JOp.cond(JExpr.invoke(getter).invoke("length").eq(JExpr.lit(0)), JExpr.lit(" "), JExpr.invoke(getter)));
 			case NUMBER:
+			case DURATION:
 				return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value").arg(JExpr.invoke(getter));
 			//all PodioField implementations are treated equally here:
 			case DATE:
@@ -269,6 +273,8 @@ public class AppGenerator {
 				return createGetStringFieldValue(jVar, "value", jCodeModel);
 			case NUMBER:
 				return createGetDoubleFieldValue(jVar);
+			case DURATION:
+			    	return createGetIntegerFieldValue(jVar);
 			case MONEY:
 				return createGetCurrencyFieldValue(jVar);
 			case DATE:
@@ -326,8 +332,15 @@ public class AppGenerator {
 	 * @return
 	 */
 	private JExpression createGetDoubleFieldValue(JVar jVar) {
-		// Double.parseDouble((String) field.getValues().get(0).get("value")
 		return jCodeModel.ref(Double.class).staticInvoke("parseDouble").arg(createGetStringFieldValue(jVar, "value", jCodeModel));
 	}
 
+	/**
+	 * @param jVar
+	 *            needs to be of type {@link FieldValuesView}.
+	 * @return
+	 */
+	private JExpression createGetIntegerFieldValue(JVar jVar) {
+	    return JExpr.cast(jCodeModel._ref(Integer.class), jVar.invoke("getValues").invoke("get").arg(JExpr.lit(0)).invoke("get").arg("value"));
+	}
 }
