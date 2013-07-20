@@ -126,9 +126,10 @@ public class AppGenerator {
 			String javadoc = f.getConfiguration().getDescription();
 			if (type.equals(PodioType.UNDEFINED)) {
 				javadoc = javadoc == null ? FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC : javadoc + "\n" + FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC;
-			}
-			if (type.equals(PodioType.DURATION)) {
+			} else if (type.equals(PodioType.DURATION)) {
 				javadoc = javadoc == null ? "Duration in seconds." : javadoc + "\n" + "Duration in seconds.";
+			} else if (type.equals(PodioType.PROGRESS)) {
+				javadoc = javadoc == null ? "Progress: 0=min, 100=max." : javadoc + "\n" + "Progress: 0=min, 100=max.";
 			}
 
 			JClass javaType = getType(type, f);
@@ -237,6 +238,7 @@ public class AppGenerator {
 				return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value").arg(JOp.cond(JExpr.invoke(getter).invoke("length").eq(JExpr.lit(0)), JExpr.lit(" "), JExpr.invoke(getter)));
 			case NUMBER:
 			case DURATION:
+			case PROGRESS:
 				return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value").arg(JExpr.invoke(getter));
 			//all PodioField implementations are treated equally here:
 			case DATE:
@@ -274,6 +276,7 @@ public class AppGenerator {
 			case NUMBER:
 				return createGetDoubleFieldValue(jVar);
 			case DURATION:
+			case PROGRESS:
 			    	return createGetIntegerFieldValue(jVar);
 			case MONEY:
 				return createGetCurrencyFieldValue(jVar);
