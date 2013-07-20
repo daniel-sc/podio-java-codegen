@@ -30,52 +30,58 @@ import org.apache.maven.plugins.annotations.Parameter;
 import com.java_podio.code_gen.CodeGenMain;
 import com.sun.codemodel.JClassAlreadyExistsException;
 
-
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class PodioCodeGenMojo extends AbstractMojo {
-	
-	@Parameter(required=true)
-	private String user;
-	
-	@Parameter(required=true)
-	private String password;
-	
-	@Parameter
-	private Integer spaceId;
-	
-	@Parameter
-	private List<Integer> appIds;
-	
-	@Parameter(defaultValue="podio.generated")
-	private String basePackage;
-	
-	@Parameter(defaultValue = "${project.build.sourceDirectory}", required = true)
-	private File outputDirectory;
 
-	public void execute() throws MojoExecutionException, MojoFailureException {
-		if (!outputDirectory.exists()) {
-			outputDirectory.mkdirs();
-		}
+    @Parameter(required = true)
+    private String user;
 
-		getLog().debug("user="+user);
-		getLog().debug("password="+password);
-		getLog().debug("spaceId="+spaceId);
-		getLog().debug("appIds="+appIds);
-		getLog().debug("basePackage="+basePackage);
-		getLog().debug("outputDirectory="+outputDirectory.toString());
-		
-		try {
-			if(spaceId!=null && spaceId>0) {
-				CodeGenMain.generateSpace(user, password, spaceId, outputDirectory, basePackage);
-			} else if (appIds!=null && appIds.size()>0 ) {
-				CodeGenMain.generateApps(user, password, appIds, outputDirectory, basePackage);
-			} else {
-				throw new MojoFailureException("Must provide either spaceId or appIds!");
-			}
-		} catch (JClassAlreadyExistsException e) {
-			throw new MojoExecutionException("Error: duplicate classes!", e);
-		} catch (IOException e) {
-			throw new MojoExecutionException("Error: could not write classes!", e);
-		}
+    @Parameter(required = true)
+    private String password;
+
+    @Parameter
+    private Integer spaceId;
+
+    @Parameter
+    private List<Integer> appIds;
+
+    @Parameter(defaultValue = "podio.generated")
+    private String basePackage;
+
+    @Parameter(defaultValue = "${project.build.sourceDirectory}", required = true)
+    private File outputDirectory;
+
+    @Parameter(defaultValue = "UTF-8")
+    private String encoding;
+
+    public void execute() throws MojoExecutionException, MojoFailureException {
+	if (!outputDirectory.exists()) {
+	    outputDirectory.mkdirs();
 	}
+
+	getLog().debug("user=" + user);
+	getLog().debug("password=" + password);
+	getLog().debug("spaceId=" + spaceId);
+	getLog().debug("appIds=" + appIds);
+	getLog().debug("basePackage=" + basePackage);
+	getLog().debug("outputDirectory=" + outputDirectory.toString());
+
+	try {
+	    if (spaceId != null && spaceId > 0) {
+		CodeGenMain.generateSpace(user, password, spaceId,
+			outputDirectory, basePackage, encoding);
+	    } else if (appIds != null && appIds.size() > 0) {
+		CodeGenMain.generateApps(user, password, appIds,
+			outputDirectory, basePackage, encoding);
+	    } else {
+		throw new MojoFailureException(
+			"Must provide either spaceId or appIds!");
+	    }
+	} catch (JClassAlreadyExistsException e) {
+	    throw new MojoExecutionException("Error: duplicate classes!", e);
+	} catch (IOException e) {
+	    throw new MojoExecutionException("Error: could not write classes!",
+		    e);
+	}
+    }
 }

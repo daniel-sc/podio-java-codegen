@@ -1,6 +1,7 @@
 package com.java_podio.code_gen;
 
 import com.google.common.base.CaseFormat;
+import com.java_podio.code_gen.static_classes.PodioCategory;
 import com.podio.app.ApplicationField;
 import com.podio.app.CategoryOption;
 import com.podio.app.CategoryOptionStatus;
@@ -40,6 +41,7 @@ public class EnumGenerator {
 	 */
 	public JDefinedClass generateEnum(ApplicationField f, String name) throws JClassAlreadyExistsException {
 		JDefinedClass result = jp != null ? jp._enum(name) : jc._package("")._enum(name);
+		result._implements(PodioCategory.class);
 
 		// fields:
 		JFieldVar podioId = result.field(JMod.PRIVATE, jc.INT, "podioId");

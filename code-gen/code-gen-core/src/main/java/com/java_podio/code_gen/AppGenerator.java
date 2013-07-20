@@ -116,6 +116,7 @@ public class AppGenerator {
 		// itemConstructor:
 		constructorFromItem = jc.constructor(JMod.PUBLIC);
 		JVar constructorFromItemParam = constructorFromItem.param(Item.class, CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, className) + "Item");
+		constructorFromItem._throws(ParseException.class);
 		constructorFromItem.body().invoke(_setValue()).arg(constructorFromItemParam);
 
 		for (ApplicationField f : app.getFields()) {
@@ -156,6 +157,7 @@ public class AppGenerator {
 		}
 
 		_setValue = jc.method(JMod.PUBLIC, jCodeModel.VOID, "setValue");
+		_setValue._throws(ParseException.class);
 		_setValue.annotate(SuppressWarnings.class).param("value", "unchecked");
 		JVar setValuesFromItemParam = _setValue.param(Item.class, CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, "item"));
 		_setValue.body().add((JExpr._super().invoke("setValue").arg(setValuesFromItemParam)));
@@ -190,21 +192,19 @@ public class AppGenerator {
 			case MONEY:
 				result = jCodeModel.ref(PodioCurrency.class);
 				break;
+			case CATEGORY_MULTI:
 			case CATEGORY_SINGLE:
 				String name = JavaNames.createValidJavaTypeName(f.getConfiguration().getLabel(), jp.name());
-				if (f.getConfiguration().getSettings().getMultiple().equals(Boolean.FALSE)) {
-
 					try {
 						result = enumGenerator.generateEnum(f, name);
+						if(type.equals(PodioType.CATEGORY_MULTI)) {
+						    result = jCodeModel.ref(List.class).narrow(result);
+						}
 					} catch (JClassAlreadyExistsException e) {
 						System.out.println("ERROR: could not generate enum with name: " + name + "(might exist twice?!)");
 						e.printStackTrace();
 						result = jCodeModel.ref(Integer.class);
 					}
-				} else {
-					System.out.println("ERROR: Categories with multiple values not supportet yet! (Category: " + f.getConfiguration().getLabel() + ")");
-					result = jCodeModel.ref(Void.class);
-				}
 				break;
 			case APP:
 				result = jCodeModel.ref(List.class).narrow(Integer.class);
@@ -242,6 +242,9 @@ public class AppGenerator {
 				// new FieldValuesUpdate("status", "value",
 				// customer.getPowerStatus().getId())
 				return JExpr._new(jCodeModel.ref(FieldValuesUpdate.class)).arg(f.getExternalId()).arg("value").arg(JExpr.invoke(getter).invoke("getPodioId"));
+			case CATEGORY_MULTI:
+			    return JExpr.invoke("getFielddValuesUpdateFromMultiCategory").arg(JExpr.invoke(getter)).arg(f.getExternalId());
+
 			case APP:
 				return JExpr.invoke("getFieldValuesUpdateFromApp").arg(JExpr.invoke(getter)).arg(f.getExternalId());
 
@@ -279,9 +282,9 @@ public class AppGenerator {
 				// Object.class),
 				// jVar.invoke("getValues").invoke("get").arg(JExpr.lit(0)).invoke("get").arg("value"))
 				// .invoke("id"));
+			case CATEGORY_MULTI:
+			    return JExpr.invoke("parseMultiCategoryField").arg(jVar).arg(JExpr.dotclass(javaType.getTypeParameters().get(0)));
 			case APP:
-				// ((Map<String, Map<String, Integer>>)
-				// field.getValues().get(0)).get("value").get("item_id")
 				return JExpr.invoke("parseAppField").arg(jVar);
 
 			default:
