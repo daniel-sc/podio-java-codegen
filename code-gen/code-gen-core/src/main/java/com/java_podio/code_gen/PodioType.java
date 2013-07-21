@@ -31,12 +31,15 @@ public enum PodioType {
     APP(List.class),
 
     DATE(PodioDate.class),
-    
+
     DURATION(Integer.class),
-    
+
     PROGRESS(Integer.class),
-    
-    CONTACT(List.class);
+
+    CONTACT(List.class),
+
+    /** used for links */
+    EMBED(List.class);
 
     private final Class<? extends Object> javaType;
 
@@ -53,6 +56,8 @@ public enum PodioType {
 	map.put(DURATION, ApplicationFieldType.DURATION);
 	map.put(PROGRESS, ApplicationFieldType.PROGRESS);
 	map.put(CONTACT, ApplicationFieldType.CONTACT);
+	map.put(EMBED, ApplicationFieldType.EMBED);
+
     }
 
     private PodioType(Class<? extends Object> javaType) {
@@ -77,8 +82,7 @@ public enum PodioType {
 
     public static PodioType forApplicationField(ApplicationField f) {
 	if (ApplicationFieldType.CATEGORY.equals(f.getType())) {
-	    if (Boolean.TRUE.equals(f.getConfiguration().getSettings()
-		    .getMultiple())) {
+	    if (Boolean.TRUE.equals(f.getConfiguration().getSettings().getMultiple())) {
 		return CATEGORY_MULTI;
 	    } else {
 		return CATEGORY_SINGLE;

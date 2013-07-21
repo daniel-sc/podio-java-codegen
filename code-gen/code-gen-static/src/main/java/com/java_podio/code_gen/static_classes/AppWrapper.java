@@ -2,11 +2,13 @@ package com.java_podio.code_gen.static_classes;
 
 import java.lang.reflect.InvocationTargetException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
@@ -242,16 +244,14 @@ public abstract class AppWrapper {
     /**
      * @return a list of referenced item ids
      */
-    public static List<Integer> parseAppField(FieldValuesView fieldValue)
-	    throws ParseException {
+    protected static List<Integer> parseAppField(FieldValuesView fieldValue) throws ParseException {
 	List<Integer> result = new ArrayList<Integer>();
 	List<Map<String, ?>> entries;
 	entries = ((List<Map<String, ?>>) fieldValue.getValues());
 	Iterator<Map<String, ?>> iterator = entries.iterator();
 	while (iterator.hasNext()) {
 	    @SuppressWarnings("unchecked")
-	    Integer value = ((Integer) ((Map<String, ?>) iterator.next().get(
-		    "value")).get("item_id"));
+	    Integer value = ((Integer) ((Map<String, ?>) iterator.next().get("value")).get("item_id"));
 	    if (value != null) {
 		result.add(value);
 	    }
@@ -259,8 +259,7 @@ public abstract class AppWrapper {
 	return result;
     }
 
-    public static FieldValuesUpdate getFieldValuesUpdateFromApp(
-	    List<Integer> ids, String externalId) {
+    protected static FieldValuesUpdate getFieldValuesUpdateFromApp(List<Integer> ids, String externalId) {
 	if (ids == null) {
 	    return null;
 	}
@@ -271,29 +270,25 @@ public abstract class AppWrapper {
 	return new FieldValuesUpdate(externalId, values);
     }
 
-    public static <T extends PodioCategory> FieldValuesUpdate getFielddValuesUpdateFromMultiCategory(
+    protected static <T extends PodioCategory> FieldValuesUpdate getFielddValuesUpdateFromMultiCategory(
 	    List<T> selections, String externalId) {
 	if (selections == null) {
 	    return null;
 	}
 	ArrayList<Map<String, ?>> values = new ArrayList<Map<String, ?>>();
 	for (T selection : selections) {
-	    values.add(java.util.Collections.singletonMap("value", new Integer(
-		    selection.getPodioId())));
+	    values.add(java.util.Collections.singletonMap("value", new Integer(selection.getPodioId())));
 	}
 	return new FieldValuesUpdate(externalId, values);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Enum<T>> List<T> parseMultiCategoryField(
-	    FieldValuesView f, Class<T> enumtype) {
+    protected static <T extends Enum<T>> List<T> parseMultiCategoryField(FieldValuesView f, Class<T> enumtype) {
 	List<T> result = new ArrayList<T>();
 	try {
 	    for (Map<String, ?> value : f.getValues()) {
-		Integer id = (Integer) ((java.util.Map<String, ?>) value
-			.get("value")).get("id");
-		Object enumvalue = enumtype.getMethod("byId", int.class)
-			.invoke(null, id.intValue());
+		Integer id = (Integer) ((java.util.Map<String, ?>) value.get("value")).get("id");
+		Object enumvalue = enumtype.getMethod("byId", int.class).invoke(null, id.intValue());
 		result.add((T) enumvalue);
 	    }
 	} catch (TypeNotPresentException e) {
@@ -318,30 +313,7 @@ public abstract class AppWrapper {
 	return result;
     }
 
-    public static List<Profile> parseContactField(FieldValuesView f) {
-	ObjectMapper objectMapper = new ObjectMapper();
-	objectMapper
-		.configure(
-			DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES,
-			false);
-
-	List<Profile> result = new ArrayList<Profile>();
-	List<Map<String, ?>> entries;
-	entries = ((List<Map<String, ?>>) f.getValues());
-	Iterator<Map<String, ?>> iterator = entries.iterator();
-	while (iterator.hasNext()) {
-
-	    Profile profile = objectMapper.convertValue(
-		    iterator.next().get("value"), Profile.class);
-	    if (profile != null) {
-		result.add(profile);
-	    }
-	}
-	return result;
-    }
-    
-    public static FieldValuesUpdate getFieldValuesUpdateFromContacts(
-	    List<Profile> profiles, String externalId) {
+    protected static FieldValuesUpdate getFieldValuesUpdateFromContacts(List<Profile> profiles, String externalId) {
 	if (profiles == null) {
 	    return null;
 	}
@@ -350,5 +322,33 @@ public abstract class AppWrapper {
 	    values.add(java.util.Collections.singletonMap("value", new Integer(profile.getProfileId())));
 	}
 	return new FieldValuesUpdate(externalId, values);
+    }
+
+    /**
+     * Parses {@code f} to type {@code type} by using {@link JsonProperty}
+     * annotations in {@code type}.
+     * 
+     * @param f
+     * @param type
+     * @param elementKey
+     *            key of elements, such as "value" or "embed"
+     * @return list of parsed fields - might be empty.
+     */
+    protected static <T> List<T> parseFieldJson(FieldValuesView f, Class<T> type, String elementKey) {
+	ObjectMapper objectMapper = new ObjectMapper();
+	objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+	objectMapper.setDateFormat(new SimpleDateFormat("yyyy")); //-MM-dd HH:mm:ss
+
+	List<T> result = new ArrayList<T>();
+	List<Map<String, ?>> entries = ((List<Map<String, ?>>) f.getValues());
+	Iterator<Map<String, ?>> iterator = entries.iterator();
+	while (iterator.hasNext()) {
+
+	    T element = objectMapper.convertValue(iterator.next().get(elementKey), type);
+	    if (element != null) {
+		result.add(element);
+	    }
+	}
+	return result;
     }
 }

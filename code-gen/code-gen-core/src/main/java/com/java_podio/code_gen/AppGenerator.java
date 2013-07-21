@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.base.CaseFormat;
 import com.java_podio.code_gen.static_classes.AppWrapper;
+import com.java_podio.code_gen.static_classes.MyEmbed;
 import com.java_podio.code_gen.static_classes.PodioCurrency;
 import com.java_podio.code_gen.static_classes.PodioDate;
 import com.podio.app.Application;
@@ -229,9 +230,6 @@ public class AppGenerator {
     private JClass getType(PodioType type, ApplicationField f) {
 	JClass result;
 	switch (type) {
-	case MONEY:
-	    result = jCodeModel.ref(PodioCurrency.class);
-	    break;
 	case CATEGORY_MULTI:
 	case CATEGORY_SINGLE:
 	    String name = JavaNames.createValidJavaTypeName(f.getConfiguration().getLabel(), jp.name());
@@ -251,6 +249,9 @@ public class AppGenerator {
 	    break;
 	case APP:
 	    result = jCodeModel.ref(List.class).narrow(Integer.class);
+	    break;
+	case EMBED:
+	    result = jCodeModel.ref(List.class).narrow(MyEmbed.class);
 	    break;
 
 	default:
@@ -352,8 +353,10 @@ public class AppGenerator {
 	case APP:
 	    return JExpr.invoke("parseAppField").arg(jVar);
 	case CONTACT:
-	    return JExpr.invoke("parseContactField").arg(jVar);
-
+	    return JExpr.invoke("parseFieldJson").arg(jVar).arg(JExpr.dotclass(jCodeModel.ref(Profile.class))).arg("value");
+	case EMBED:
+	    return JExpr.invoke("parseFieldJson").arg(jVar).arg(JExpr.dotclass(jCodeModel.ref(MyEmbed.class))).arg("embed");
+	    
 	default:
 	    System.out.println("WARNING: could not create getFieldValueExpression for type: " + type);
 	    return JExpr._null();
