@@ -13,6 +13,7 @@ import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.podio.contact.Profile;
+import com.podio.embed.Embed;
 import com.podio.file.File;
 import com.podio.item.FieldValuesUpdate;
 import com.podio.item.FieldValuesView;
@@ -320,6 +321,17 @@ public abstract class AppWrapper {
 	ArrayList<Map<String, ?>> values = new ArrayList<Map<String, ?>>();
 	for (Profile profile : profiles) {
 	    values.add(java.util.Collections.singletonMap("value", new Integer(profile.getProfileId())));
+	}
+	return new FieldValuesUpdate(externalId, values);
+    }
+    
+    protected static FieldValuesUpdate getFieldValuesUpdateFromEmbeds(List<Embed> embeds, String externalId) {
+	if(embeds==null) {
+	    return null;
+	}
+	ArrayList<Map<String, ?>> values = new ArrayList<Map<String, ?>>();
+	for (Embed embed : embeds) {
+	    values.add(java.util.Collections.singletonMap("embed", embed.getId()));
 	}
 	return new FieldValuesUpdate(externalId, values);
     }

@@ -5,12 +5,12 @@ import java.util.List;
 
 import com.google.common.base.CaseFormat;
 import com.java_podio.code_gen.static_classes.AppWrapper;
-import com.java_podio.code_gen.static_classes.MyEmbed;
 import com.java_podio.code_gen.static_classes.PodioCurrency;
 import com.java_podio.code_gen.static_classes.PodioDate;
 import com.podio.app.Application;
 import com.podio.app.ApplicationField;
 import com.podio.contact.Profile;
+import com.podio.embed.Embed;
 import com.podio.item.FieldValuesUpdate;
 import com.podio.item.FieldValuesView;
 import com.podio.item.Item;
@@ -179,6 +179,9 @@ public class AppGenerator {
 	} else if (type.equals(PodioType.CONTACT)) {
 	    javadoc = javadoc == null ? "For updates/create only {@code profileId} is relevant." : javadoc + "\n"
 		    + "For updates/create only {@code profileId} is relevant";
+	} else if (type.equals(PodioType.EMBED)) {
+	    javadoc = javadoc == null ? "For updates/create only {@code id} is relevant (need to create embed beforehand!)." : javadoc + "\n"
+		    + "For updates/create only {@code id} is relevant (need to create embed beforehand!).";
 	}
 	return javadoc;
     }
@@ -251,7 +254,7 @@ public class AppGenerator {
 	    result = jCodeModel.ref(List.class).narrow(Integer.class);
 	    break;
 	case EMBED:
-	    result = jCodeModel.ref(List.class).narrow(MyEmbed.class);
+	    result = jCodeModel.ref(List.class).narrow(Embed.class);
 	    break;
 
 	default:
@@ -304,6 +307,8 @@ public class AppGenerator {
 		    .arg(f.getExternalId());
 	case CONTACT:
 	    return JExpr.invoke("getFieldValuesUpdateFromContacts").arg(JExpr.invoke(getter)).arg(f.getExternalId());
+	case EMBED:
+	    return JExpr.invoke("getFieldValuesUpdateFromEmbeds").arg(JExpr.invoke(getter)).arg(f.getExternalId());
 	case APP:
 	    return JExpr.invoke("getFieldValuesUpdateFromApp").arg(JExpr.invoke(getter)).arg(f.getExternalId());
 
@@ -355,7 +360,7 @@ public class AppGenerator {
 	case CONTACT:
 	    return JExpr.invoke("parseFieldJson").arg(jVar).arg(JExpr.dotclass(jCodeModel.ref(Profile.class))).arg("value");
 	case EMBED:
-	    return JExpr.invoke("parseFieldJson").arg(jVar).arg(JExpr.dotclass(jCodeModel.ref(MyEmbed.class))).arg("embed");
+	    return JExpr.invoke("parseFieldJson").arg(jVar).arg(JExpr.dotclass(jCodeModel.ref(Embed.class))).arg("embed");
 	    
 	default:
 	    System.out.println("WARNING: could not create getFieldValueExpression for type: " + type);
