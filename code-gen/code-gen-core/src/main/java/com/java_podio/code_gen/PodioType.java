@@ -34,7 +34,9 @@ public enum PodioType {
     
     DURATION(Integer.class),
     
-    PROGRESS(Integer.class);
+    PROGRESS(Integer.class),
+    
+    CONTACT(List.class);
 
     private final Class<? extends Object> javaType;
 
@@ -50,6 +52,7 @@ public enum PodioType {
 	map.put(DATE, ApplicationFieldType.DATE);
 	map.put(DURATION, ApplicationFieldType.DURATION);
 	map.put(PROGRESS, ApplicationFieldType.PROGRESS);
+	map.put(CONTACT, ApplicationFieldType.CONTACT);
     }
 
     private PodioType(Class<? extends Object> javaType) {

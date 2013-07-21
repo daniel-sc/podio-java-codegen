@@ -7,6 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import com.podio.contact.Profile;
 import com.podio.file.File;
 import com.podio.item.FieldValuesUpdate;
 import com.podio.item.FieldValuesView;
@@ -312,5 +316,39 @@ public abstract class AppWrapper {
 	    return result;
 	}
 	return result;
+    }
+
+    public static List<Profile> parseContactField(FieldValuesView f) {
+	ObjectMapper objectMapper = new ObjectMapper();
+	objectMapper
+		.configure(
+			DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES,
+			false);
+
+	List<Profile> result = new ArrayList<Profile>();
+	List<Map<String, ?>> entries;
+	entries = ((List<Map<String, ?>>) f.getValues());
+	Iterator<Map<String, ?>> iterator = entries.iterator();
+	while (iterator.hasNext()) {
+
+	    Profile profile = objectMapper.convertValue(
+		    iterator.next().get("value"), Profile.class);
+	    if (profile != null) {
+		result.add(profile);
+	    }
+	}
+	return result;
+    }
+    
+    public static FieldValuesUpdate getFieldValuesUpdateFromContacts(
+	    List<Profile> profiles, String externalId) {
+	if (profiles == null) {
+	    return null;
+	}
+	ArrayList<Map<String, ?>> values = new ArrayList<Map<String, ?>>();
+	for (Profile profile : profiles) {
+	    values.add(java.util.Collections.singletonMap("value", new Integer(profile.getProfileId())));
+	}
+	return new FieldValuesUpdate(externalId, values);
     }
 }
