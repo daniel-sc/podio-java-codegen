@@ -42,6 +42,7 @@ public class PodioDate {
 	public PodioDate(String start, String end) throws ParseException {
 		if (start != null && !start.equals("")) {
 			setStartDate(true);
+			System.out.println("DEBUG START DATE="+start+"<<<");
 			setStart(PODIO_DATE_TIME_FORMATTER.parse(start));
 			if (start.substring(11).equals("00:00:00")) {
 				setStartTime(false);

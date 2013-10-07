@@ -13,6 +13,8 @@ import java.util.concurrent.FutureTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.swing.JProgressBar;
+
 import com.java_podio.code_gen.static_classes.AppWrapper;
 import com.podio.APIApplicationException;
 import com.podio.BaseAPI;
@@ -91,10 +93,31 @@ public abstract class GenericPodioInterface {
      * @return
      */
     public <T extends AppWrapper> List<T> getItemsById(Class<T> type, List<Integer> podioIds) {
-	ArrayList<T> result = new ArrayList<T>(podioIds.size());
-	for (Integer id : podioIds) {
-	    result.add(getItemById(type, id));
+	return getItemsById(type, podioIds, null);
+    }
+    
+    /**
+     * TODO: speed up by doing only one remote call!
+     * 
+     * @param type
+     * @param podioIds
+     * @return
+     */
+    public <T extends AppWrapper> List<T> getItemsById(Class<T> type, List<Integer> podioIds, JProgressBar progressBar) {
+	if (progressBar != null) {
+	    progressBar.setValue(progressBar.getMinimum());
+	    progressBar.setString("downloading items");
+	    progressBar.setMaximum(podioIds.size());
 	}
+	ArrayList<T> result = new ArrayList<T>(podioIds.size());
+	for (int i=0; i<podioIds.size(); i++) {
+	    Integer id = podioIds.get(i);
+	    result.add(getItemById(type, id));
+	    if (progressBar != null)
+		    progressBar.setValue(i+1);
+	}
+	if (progressBar != null)
+	    progressBar.setString(null);
 	return result;
     }
 
@@ -130,8 +153,28 @@ public abstract class GenericPodioInterface {
      * @throws ParseException
      * @throws PodioConflictException
      */
-    @SuppressWarnings("unchecked")
     public <T extends AppWrapper> List<T> updateItems(List<T> items) throws ParseException, PodioConflictException {
+	return updateItems(items, null);
+    }
+    
+    /**
+     * All items are assumed to be of the same type!
+     * 
+     * @see #updateItem(AppWrapper)
+     * @param items
+     * @param progressBar
+     * @return
+     * @throws ParseException
+     * @throws PodioConflictException
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends AppWrapper> List<T> updateItems(List<T> items, JProgressBar progressBar) throws ParseException, PodioConflictException {
+	if (progressBar != null) {
+	    progressBar.setValue(progressBar.getMinimum());
+	    progressBar.setString("sending updates");
+	    progressBar.setMaximum(items.size());
+	}
+
 	Class<T> type = null;
 	if (items.size() == 0)
 	    return new ArrayList<T>();
@@ -139,10 +182,13 @@ public abstract class GenericPodioInterface {
 	    type = (Class<T>) items.get(0).getClass();
 	List<Integer> podioIds = new ArrayList<Integer>();
 	try {
-	    for (T t : items) {
+	    for (int i=0; i<items.size(); i++) {
+		T t = items.get(i);
 		LOGGER.info("Update item: " + t.toString());
 		updateItem(t);
 		podioIds.add(t.getPodioId());
+		if (progressBar != null) 
+		    progressBar.setValue(i+1);
 	    }
 	} catch (APIApplicationException e) {
 	    if (e.getError() != null && e.getError().equals("conflict")) {
@@ -151,8 +197,9 @@ public abstract class GenericPodioInterface {
 		throw e;
 	    }
 	}
-
-	return getItemsById(type, podioIds);
+	if (progressBar != null)
+	    progressBar.setString(null);
+	return getItemsById(type, podioIds, progressBar);
     }
 
     /**
@@ -325,7 +372,7 @@ public abstract class GenericPodioInterface {
 		result = type.newInstance();
 	    }
 	} catch (Exception e) {
-	    throw new PodioApiWrapperException("Could not instanciate type=" + type + " with item=" + item, e);
+	    throw new PodioApiWrapperException("Could not instanciate type=" + type + " with item.id=" + item.getId(), e);
 	}
 	return result;
     }
