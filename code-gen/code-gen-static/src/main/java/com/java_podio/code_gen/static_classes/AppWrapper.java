@@ -1,5 +1,6 @@
 package com.java_podio.code_gen.static_classes;
 
+import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,7 +22,9 @@ import com.podio.item.Item;
 import com.podio.item.ItemCreate;
 import com.podio.item.ItemUpdate;
 
-public abstract class AppWrapper {
+public abstract class AppWrapper implements Serializable {
+
+    static final long serialVersionUID = 1L;
 
     /**
      * Stores the original item, as retrieved by java-podio api.
@@ -242,6 +245,65 @@ public abstract class AppWrapper {
 	return (result + "]");
     }
 
+    /*
+     * (non-Javadoc) Excludes #originalItem
+     * 
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + ((files == null) ? 0 : files.hashCode());
+	result = prime * result + ((podioId == null) ? 0 : podioId.hashCode());
+	result = prime * result + ((podioRevision == null) ? 0 : podioRevision.hashCode());
+	result = prime * result + ((podioTags == null) ? 0 : podioTags.hashCode());
+	result = prime * result + ((podioTitle == null) ? 0 : podioTitle.hashCode());
+	return result;
+    }
+
+    /*
+     * (non-Javadoc) Excludes #originalItem
+     * 
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+	if (this == obj)
+	    return true;
+	if (obj == null)
+	    return false;
+	if (getClass() != obj.getClass())
+	    return false;
+	AppWrapper other = (AppWrapper) obj;
+	if (files == null) {
+	    if (other.files != null)
+		return false;
+	} else if (!files.equals(other.files))
+	    return false;
+	if (podioId == null) {
+	    if (other.podioId != null)
+		return false;
+	} else if (!podioId.equals(other.podioId))
+	    return false;
+	if (podioRevision == null) {
+	    if (other.podioRevision != null)
+		return false;
+	} else if (!podioRevision.equals(other.podioRevision))
+	    return false;
+	if (podioTags == null) {
+	    if (other.podioTags != null)
+		return false;
+	} else if (!podioTags.equals(other.podioTags))
+	    return false;
+	if (podioTitle == null) {
+	    if (other.podioTitle != null)
+		return false;
+	} else if (!podioTitle.equals(other.podioTitle))
+	    return false;
+	return true;
+    }
+
     /**
      * @return a list of referenced item ids
      */
@@ -324,9 +386,9 @@ public abstract class AppWrapper {
 	}
 	return new FieldValuesUpdate(externalId, values);
     }
-    
+
     protected static FieldValuesUpdate getFieldValuesUpdateFromEmbeds(List<Embed> embeds, String externalId) {
-	if(embeds==null) {
+	if (embeds == null) {
 	    return null;
 	}
 	ArrayList<Map<String, ?>> values = new ArrayList<Map<String, ?>>();
@@ -349,7 +411,8 @@ public abstract class AppWrapper {
     protected static <T> List<T> parseFieldJson(FieldValuesView f, Class<T> type, String elementKey) {
 	ObjectMapper objectMapper = new ObjectMapper();
 	objectMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-	objectMapper.setDateFormat(new SimpleDateFormat("yyyy")); //-MM-dd HH:mm:ss
+	objectMapper.setDateFormat(new SimpleDateFormat("yyyy")); // -MM-dd
+								  // HH:mm:ss
 
 	List<T> result = new ArrayList<T>();
 	List<Map<String, ?>> entries = ((List<Map<String, ?>>) f.getValues());

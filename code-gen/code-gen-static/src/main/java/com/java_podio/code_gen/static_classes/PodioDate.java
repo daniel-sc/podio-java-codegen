@@ -1,5 +1,6 @@
 package com.java_podio.code_gen.static_classes;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -7,7 +8,9 @@ import java.util.HashMap;
 
 import com.podio.item.FieldValuesUpdate;
 
-public class PodioDate {
+public class PodioDate implements Serializable {
+
+    	private static final long serialVersionUID = 1L;
 
 	protected final static SimpleDateFormat PODIO_DATE_TIME_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 

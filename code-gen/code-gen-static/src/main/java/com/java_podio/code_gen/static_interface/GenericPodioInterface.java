@@ -30,7 +30,7 @@ import com.podio.item.ItemsResponse;
 /**
  * Generic interface methods for generated {@link AppWrapper} classes.
  */
-public abstract class GenericPodioInterface {
+public abstract class GenericPodioInterface implements GenericPodioInterfaceInterface {
 
     private static final Logger LOGGER = Logger.getLogger(GenericPodioInterface.class.getName());
 
@@ -47,20 +47,15 @@ public abstract class GenericPodioInterface {
      */
     protected abstract <T extends BaseAPI> T getAPI(Integer appId, Class<T> type);
 
-    /**
-     * @param file
-     * @param appId
-     * @param filename
-     * @return fileId
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#uploadFile(java.io.File, int, java.lang.String)
      */
     public int uploadFile(File file, int appId, String filename) {
 	return getAPI(appId, FileAPI.class).uploadFile(filename, file);
     }
 
-    /**
-     * @param item
-     *            podioId will be set for this object
-     * @return podioId of the created item
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#addItem(com.java_podio.code_gen.static_classes.AppWrapper)
      */
     public int addItem(AppWrapper item) {
 	ItemCreate itemCreate = item.getItemCreate();
@@ -70,6 +65,9 @@ public abstract class GenericPodioInterface {
 	return podioId;
     }
 
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#getItemById(java.lang.Class, java.lang.Integer)
+     */
     public <T extends AppWrapper> T getItemById(Class<T> type, Integer podioId) {
 	T result = null;
 	Item item = null;
@@ -85,23 +83,15 @@ public abstract class GenericPodioInterface {
 	return result;
     }
 
-    /**
-     * TODO: speed up by doing only one remote call!
-     * 
-     * @param type
-     * @param podioIds
-     * @return
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#getItemsById(java.lang.Class, java.util.List)
      */
     public <T extends AppWrapper> List<T> getItemsById(Class<T> type, List<Integer> podioIds) {
 	return getItemsById(type, podioIds, null);
     }
     
-    /**
-     * TODO: speed up by doing only one remote call!
-     * 
-     * @param type
-     * @param podioIds
-     * @return
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#getItemsById(java.lang.Class, java.util.List, javax.swing.JProgressBar)
      */
     public <T extends AppWrapper> List<T> getItemsById(Class<T> type, List<Integer> podioIds, JProgressBar progressBar) {
 	if (progressBar != null) {
@@ -121,13 +111,8 @@ public abstract class GenericPodioInterface {
 	return result;
     }
 
-    /**
-     * Updates item with all fields. Assumes {@link item#getPodioCustomerID()}
-     * is set.
-     * 
-     * @param item
-     * @return the updated item, this contains the new revision
-     * @throws PodioConflictException
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#updateItem(T)
      */
     @SuppressWarnings("unchecked")
     public <T extends AppWrapper> T updateItem(T item) throws PodioConflictException {
@@ -144,28 +129,15 @@ public abstract class GenericPodioInterface {
 	}
     }
 
-    /**
-     * All items are assumed to be of the same type!
-     * 
-     * @see #updateItem(AppWrapper)
-     * @param items
-     * @return
-     * @throws ParseException
-     * @throws PodioConflictException
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#updateItems(java.util.List)
      */
     public <T extends AppWrapper> List<T> updateItems(List<T> items) throws ParseException, PodioConflictException {
 	return updateItems(items, null);
     }
     
-    /**
-     * All items are assumed to be of the same type!
-     * 
-     * @see #updateItem(AppWrapper)
-     * @param items
-     * @param progressBar
-     * @return
-     * @throws ParseException
-     * @throws PodioConflictException
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#updateItems(java.util.List, javax.swing.JProgressBar)
      */
     @SuppressWarnings("unchecked")
     public <T extends AppWrapper> List<T> updateItems(List<T> items, JProgressBar progressBar) throws ParseException, PodioConflictException {
@@ -202,15 +174,8 @@ public abstract class GenericPodioInterface {
 	return getItemsById(type, podioIds, progressBar);
     }
 
-    /**
-     * Fetches all entries for an app from Podio. This is done parallel in
-     * chunks of 500 (which is the maximum).
-     * 
-     * @param app
-     *            generated class of app
-     * @return
-     * @throws InterruptedException
-     * @throws ExecutionException
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#getAllItems(java.lang.Class)
      */
     public <T extends AppWrapper> List<T> getAllItems(Class<T> app) throws InterruptedException, ExecutionException {
 	List<T> result = new ArrayList<T>();
@@ -263,7 +228,6 @@ public abstract class GenericPodioInterface {
 	private Class<T> type;
 	private int amount = 500;
 
-	@SuppressWarnings("unused")
 	public void setAmount(int amount) {
 	    this.amount = amount;
 	}
@@ -295,21 +259,8 @@ public abstract class GenericPodioInterface {
 
     }
 
-    /**
-     * This directly queries the given app ({@code type} and field.
-     * 
-     * For all references employ {@link ItemAPI#getItemReference(int)} (which
-     * will probably be slower, as it needs 2 remote calls).
-     * 
-     * @param type
-     *            app of items that are returned
-     * @param fieldId
-     *            id of referencing field in app {@code type}. Can be field id or field external id.
-     * @param podioId
-     *            referenced item (might not be in app {@code type}!)
-     * @return list of items from app {@code type} that reference
-     *         {@code podioId} in field {@code fieldId}
-     * @throws PodioApiWrapperException
+    /* (non-Javadoc)
+     * @see com.java_podio.code_gen.static_interface.GenericPodioInterfaceInterface#getAssociatedItems(java.lang.Class, java.lang.String, java.lang.Integer)
      */
     public <T extends AppWrapper> List<T> getAssociatedItems(Class<T> type, final String fieldId, Integer podioId)
             throws PodioApiWrapperException {

@@ -1,6 +1,8 @@
 package com.java_podio.code_gen.static_classes;
 
-public interface PodioCategory {
+import java.io.Serializable;
+
+public interface PodioCategory extends Serializable {
     
     int getPodioId();
 

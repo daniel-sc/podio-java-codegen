@@ -5,13 +5,17 @@ import java.text.NumberFormat;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.Locale;
+
 import com.podio.item.FieldValuesUpdate;
 
 public class PodioCurrency implements PodioField {
 
-	private Currency currency;
+    	private static final long serialVersionUID = 1L;
+
+    	public static NumberFormat currencyValueFormatter = DecimalFormat.getInstance(Locale.US);
+	
+    	private Currency currency;
 	private Double value;
-	public static NumberFormat currencyValueFormatter = DecimalFormat.getInstance(Locale.US);
 
 	static {
 		currencyValueFormatter.setGroupingUsed(false);
@@ -78,5 +82,38 @@ public class PodioCurrency implements PodioField {
 		result += (", value=" + value);
 		return (result + "]");
 	}
+
+	@Override
+	public int hashCode() {
+	    final int prime = 31;
+	    int result = 1;
+	    result = prime * result + ((currency == null) ? 0 : currency.hashCode());
+	    result = prime * result + ((value == null) ? 0 : value.hashCode());
+	    return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+	    if (this == obj)
+		return true;
+	    if (obj == null)
+		return false;
+	    if (getClass() != obj.getClass())
+		return false;
+	    PodioCurrency other = (PodioCurrency) obj;
+	    if (currency == null) {
+		if (other.currency != null)
+		    return false;
+	    } else if (!currency.equals(other.currency))
+		return false;
+	    if (value == null) {
+		if (other.value != null)
+		    return false;
+	    } else if (!value.equals(other.value))
+		return false;
+	    return true;
+	}
+	
+	
 
 }

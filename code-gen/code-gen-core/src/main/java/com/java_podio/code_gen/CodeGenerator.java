@@ -9,6 +9,7 @@ import com.podio.app.CategoryOption;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JCodeModel;
+import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JFieldVar;
@@ -180,6 +181,34 @@ public class CodeGenerator {
 			first = false;
 		}
 		toString.body()._return(result.plus(JExpr.lit("]")));
+	}
+	
+	/**
+	 * Adds a equals method, containing all non-static field variables.
+	 * 
+	 * @param jclass
+	 * @param jCodeModel
+	 * @param includeSuperEquals
+	 *            if {@code true} super.equals() is incorporated.
+	 */
+	public static void addEquals(JDefinedClass jclass, JCodeModel jCodeModel, boolean includeSuperEquals) {
+		JMethod equals = jclass.method(JMod.PUBLIC, jCodeModel.BOOLEAN, "equals");
+		JVar _obj = equals.param(jCodeModel.ref(Object.class), "obj");
+		if (includeSuperEquals) {
+			equals.body()._if(JExpr.FALSE.eq(JExpr._super().invoke("equals").arg(_obj)))._then()._return(JExpr.FALSE);
+		}
+		equals.body().directStatement("if (this == obj)\n	return true;\nif (obj == null)\n	return false;\nif (getClass() != obj.getClass())	return false;");
+		JVar _other = equals.body().decl(jclass, "other", JExpr.cast(jclass, _obj));
+		for (JFieldVar jvar : jclass.fields().values()) {
+			if ((jvar.mods().getValue() & JMod.STATIC) == JMod.STATIC) {
+				continue;
+			}
+			
+			JConditional _outerIf = equals.body()._if(jvar.eq(JExpr._null()));
+			_outerIf._then()._if(_other.ref(jvar.name()).ne(JExpr._null()))._then()._return(JExpr.FALSE);
+			_outerIf._else()._if((jvar.invoke("equals").arg(_other.ref(jvar.name())).not()))._then()._return(JExpr.FALSE);
+		}
+		equals.body()._return(JExpr.TRUE);
 	}
 
 }

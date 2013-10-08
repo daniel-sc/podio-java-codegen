@@ -158,6 +158,7 @@ public class AppGenerator {
 	_getItemCreate().body()._return(itemCreateResult);
 
 	CodeGenerator.addToString(jc, jCodeModel, true);
+	CodeGenerator.addEquals(jc, jCodeModel, true);
 
 	return jc;
     }
