@@ -197,7 +197,7 @@ public class CodeGenerator {
 		if (includeSuperEquals) {
 			equals.body()._if(JExpr.FALSE.eq(JExpr._super().invoke("equals").arg(_obj)))._then()._return(JExpr.FALSE);
 		}
-		equals.body().directStatement("if (this == obj)\n	return true;\nif (obj == null)\n	return false;\nif (getClass() != obj.getClass())	return false;");
+		equals.body().directStatement("\tif (this == obj)\n\t\treturn true;\n\tif (obj == null)\n\t\treturn false;\n\tif (getClass() != obj.getClass())\treturn false;");
 		JVar _other = equals.body().decl(jclass, "other", JExpr.cast(jclass, _obj));
 		for (JFieldVar jvar : jclass.fields().values()) {
 			if ((jvar.mods().getValue() & JMod.STATIC) == JMod.STATIC) {

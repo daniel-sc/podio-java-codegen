@@ -12,19 +12,19 @@ public class PodioDate implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    protected final static ThreadLocal<SimpleDateFormat> PODIO_DATE_TIME_FORMATTER = new ThreadLocal<SimpleDateFormat>() {
+    public final static ThreadLocal<SimpleDateFormat> PODIO_DATE_TIME_FORMATTER = new ThreadLocal<SimpleDateFormat>() {
 	protected SimpleDateFormat initialValue() {
 	    return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	};
     };
 
-    protected final static ThreadLocal<SimpleDateFormat> PODIO_DATE_FORMATTER = new ThreadLocal<SimpleDateFormat>() {
+    public final static ThreadLocal<SimpleDateFormat> PODIO_DATE_FORMATTER = new ThreadLocal<SimpleDateFormat>() {
 	protected SimpleDateFormat initialValue() {
 	    return new SimpleDateFormat("yyyy-MM-dd");
 	};
     };
 
-    protected final static ThreadLocal<SimpleDateFormat> PODIO_TIME_FORMATTER = new ThreadLocal<SimpleDateFormat>() {
+    public final static ThreadLocal<SimpleDateFormat> PODIO_TIME_FORMATTER = new ThreadLocal<SimpleDateFormat>() {
 	protected SimpleDateFormat initialValue() {
 	    return new SimpleDateFormat("HH:mm:ss");
 	};

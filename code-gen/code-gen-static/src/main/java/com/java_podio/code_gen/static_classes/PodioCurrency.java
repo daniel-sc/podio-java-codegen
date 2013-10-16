@@ -2,6 +2,7 @@ package com.java_podio.code_gen.static_classes;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.Currency;
 import java.util.HashMap;
 import java.util.Locale;
@@ -12,13 +13,17 @@ public class PodioCurrency implements PodioField {
 
     	private static final long serialVersionUID = 1L;
 
-    	public static NumberFormat currencyValueFormatter = DecimalFormat.getInstance(Locale.US);
+    	public static ThreadLocal<NumberFormat> currencyValueFormatter = new ThreadLocal<NumberFormat>() {
+    	    protected NumberFormat initialValue() {
+    		return DecimalFormat.getInstance(Locale.US);
+    	    };
+    	};
 	
     	private Currency currency;
 	private Double value;
 
 	static {
-		currencyValueFormatter.setGroupingUsed(false);
+		currencyValueFormatter.get().setGroupingUsed(false);
 	}
 
 	/**
@@ -71,7 +76,7 @@ public class PodioCurrency implements PodioField {
 	public FieldValuesUpdate getFieldValuesUpdate(String externalId) {
 		HashMap<String, String> valueMap = new HashMap<String, String>();
 		valueMap.put("currency", getcurrency().getCurrencyCode());
-		valueMap.put("value", currencyValueFormatter.format(getvalue()));
+		valueMap.put("value", currencyValueFormatter.get().format(getvalue()));
 		FieldValuesUpdate result = new FieldValuesUpdate(externalId, valueMap);
 		return result;
 	}
@@ -114,6 +119,23 @@ public class PodioCurrency implements PodioField {
 	    return true;
 	}
 	
-	
+	/**
+	 * Creates {@link PodioCurrency} with value from text, using the current locale.<br>
+	 * Includes trim operation.
+	 * @param text
+	 * @return {@code null}, if {@code text==null || text.length()==0}
+	 * @throws ParseException
+	 */
+	public static PodioCurrency parseString(String text) throws ParseException {
+	    if (text==null)
+		return null;
+	    text = text.trim();
+	    if (text.length()==0)
+		return null;
+	    NumberFormat numberFormat = DecimalFormat.getNumberInstance();
+	    numberFormat.setGroupingUsed(false);
+	    double value = numberFormat.parse(text).doubleValue();
+	    return new PodioCurrency(value);
+	}
 
 }

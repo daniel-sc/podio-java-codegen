@@ -35,9 +35,11 @@ public abstract class GenericPodioImpl implements GenericPodioInterface {
 
     private static final Logger LOGGER = Logger.getLogger(GenericPodioImpl.class.getName());
 
+    /**
+     * This is not thread safe! If used concurrently this needs to be changed to {@link ThreadLocal}!
+     */
     public static SimpleDateFormat defaultDateFormatNoTime = new SimpleDateFormat("dd.MM.yyyy");
-    public static SimpleDateFormat podioDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
+    
     /**
      * User or app credentials might be used here.
      * 
