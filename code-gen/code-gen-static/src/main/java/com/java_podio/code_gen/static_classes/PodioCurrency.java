@@ -137,5 +137,18 @@ public class PodioCurrency implements PodioField {
 	    double value = numberFormat.parse(text).doubleValue();
 	    return new PodioCurrency(value);
 	}
+	
+	/**
+	 * @param currency
+	 * @param format
+	 * @return "" for {@code currency==null || currency.getValue()==null}
+	 */
+	public static String toString(PodioCurrency currency, NumberFormat format) {
+	    if(currency==null)
+		return "";
+	    if(currency.getvalue()==null)
+		return "";
+	    return format.format(currency.getvalue());
+	}
 
 }
