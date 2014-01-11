@@ -15,16 +15,14 @@ public class PodioCurrency implements PodioField {
 
     	public static ThreadLocal<NumberFormat> currencyValueFormatter = new ThreadLocal<NumberFormat>() {
     	    protected NumberFormat initialValue() {
-    		return DecimalFormat.getInstance(Locale.US);
+    		NumberFormat format = DecimalFormat.getInstance(Locale.US); 
+    		format.setGroupingUsed(false);
+    		return format;
     	    };
     	};
 	
     	private Currency currency;
 	private Double value;
-
-	static {
-		currencyValueFormatter.get().setGroupingUsed(false);
-	}
 
 	/**
 	 * Creates Currency using {@link java.util.Locale.getDefault()}.
