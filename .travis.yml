@@ -1,2 +1,6 @@
 language: java
-before_install: cd code-gen
+before_install: 
+  - git clone https://github.com/daniel-sc/podio-java.git podio-java
+  - cd podio-java
+  - mvn clean install -Dmaven.test.skip=true
+  - cd ../code-gen
