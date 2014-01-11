@@ -1,4 +1,4 @@
-podio-java-codegen
+podio-java-codegen [![Build Status](https://travis-ci.org/daniel-sc/podio-java-codegen.png)](https://travis-ci.org/daniel-sc/podio-java-codegen)
 ==================
 
 Tool, that automatically creates Java (wrapper) classes for any given Podio app. Any class includes corresponding from/to Item mappers.
