@@ -145,7 +145,7 @@ public abstract class GenericPodioImpl implements GenericPodioInterface {
     public <T extends AppWrapper> T updateItem(T item) throws PodioConflictException {
 	try {
 	    getAPI(item.getAppId(), ItemAPI.class)
-		    .updateItem(item.getPodioId().intValue(), item.getItemCreate(), false);
+		    .updateItem(item.getPodioId().intValue(), item.getItemCreate(), false, false);
 	    return (T) getItemById(item.getClass(), item.getPodioId());
 	} catch (APIApplicationException e) {
 	    if (e.getError() != null && e.getError().equals("conflict")) {

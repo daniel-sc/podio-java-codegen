@@ -98,7 +98,9 @@ public class AppGenerator {
 
 	String className = JavaNames.createValidJavaTypeName(app.getConfiguration().getName(), jp.name());
 	jc = jp._class(className)._extends(AppWrapper.class);
-
+	
+	jc.field(JMod.STATIC | JMod.FINAL, jCodeModel.LONG, "serialVersionUID", JExpr.lit(1));
+	
 	_setValue = null;
 	_setValue = _setValue();
 	_getItemCreate = null;
