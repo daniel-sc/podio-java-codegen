@@ -50,6 +50,8 @@ public class JavaNames {
 				name = name.substring(0, name.lastIndexOf('_')) + "_" + i;
 			}
 		}
+		
+		allNames.get(context).add(name);
 
 		return name;
 	}

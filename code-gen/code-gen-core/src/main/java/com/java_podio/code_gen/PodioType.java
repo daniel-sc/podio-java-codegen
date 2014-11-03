@@ -93,6 +93,8 @@ public enum PodioType {
 		return podioType;
 	    }
 	}
+	System.out.println("Warning: cannot determine type of field: " + f.getType() + "("
+		+ f.getConfiguration().getLabel() + ", " + f.getStatus() + ")");
 	return UNDEFINED;
     }
 }
