@@ -8,7 +8,6 @@ import com.podio.BaseAPI;
 import com.podio.ResourceFactory;
 import com.podio.app.AppAPI;
 import com.podio.app.Application;
-import com.podio.app.ApplicationMini;
 import com.podio.oauth.OAuthClientCredentials;
 import com.podio.oauth.OAuthUserCredentials;
 
@@ -26,8 +25,8 @@ public class FetchAppInfo {
 	public List<Application> fetchAppsForSpace(Integer spaceId) {
 		List<Application> result = new ArrayList<Application>();
 		AppAPI spaceAPI = getAPI(spaceId, AppAPI.class, credentials);
-		List<ApplicationMini> apps = spaceAPI.getAppsOnSpace(spaceId);
-		for(ApplicationMini appMini : apps) {
+		List<Application> apps = spaceAPI.getAppsOnSpace(spaceId);
+		for(Application appMini : apps) {
 			result.add(fetchApp(appMini.getId()));
 		}
 		return result;
