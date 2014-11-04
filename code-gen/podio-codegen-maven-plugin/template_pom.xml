@@ -4,12 +4,15 @@
 	<groupId>YOUR_GROUP_ID</groupId>
 	<artifactId>YOUR_ARTIFACT_ID</artifactId>
 	<version>YOUR_VERSION</version>
+	<properties>
+		<codegen.version>0.0.1</codegen.version>
+	</properties>
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>com.java-podio.code-gen</groupId>
 				<artifactId>podio-codegen-maven-plugin</artifactId>
-				<version>0.0.1-SNAPSHOT</version>
+				<version>${codegen.version}</version>
 				<executions>
 					<execution>
 						<goals>
@@ -19,7 +22,7 @@
 							<user>YOUR_PODIO_USERNAME</user>
 							<password>YOUR_PODIO_PASSWORD</password>
 							<spaceId>YOUR_SPACE_ID</spaceId>
-							<basePackage>your.package.name</basePackage>
+							<basePackage>your.package_name</basePackage>
 						</configuration>
 					</execution>
 				</executions>
@@ -28,14 +31,9 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>com.podio</groupId>
-			<artifactId>api</artifactId>
-			<version>0.7.5-SNAPSHOT</version>
-		</dependency>
-		<dependency>
 			<groupId>com.java-podio.code-gen</groupId>
 			<artifactId>code-gen-static</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>${codegen.version}</version>
 		</dependency>
 	</dependencies>
 
