@@ -52,7 +52,7 @@ public interface GenericPodioInterface {
     public <T extends AppWrapper> List<T> getItemsById(Class<T> type, List<Integer> podioIds, JProgressBar progressBar);
 
     /**
-     * Updates item with all fields. Assumes {@link item#getPodioCustomerID()}
+     * Updates item with all fields. Assumes {@link com.java_podio.code_gen.static_classes.AppWrapper#getPodioId()}
      * is set.
      * 
      * @param item
@@ -88,6 +88,8 @@ public interface GenericPodioInterface {
     /**
      * Fetches all entries for an app from Podio. This is done parallel in
      * chunks of 500 (which is the maximum).
+     *
+     * Note: this uses some undocumented URI ( ItemAPI#getItems() ) - the resulting items are missing e.g. the files attribute.
      * 
      * @param app
      *            generated class of app

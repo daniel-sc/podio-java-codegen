@@ -238,7 +238,7 @@ public class AppGenerator {
 	switch (type) {
 	case CATEGORY_MULTI:
 	case CATEGORY_SINGLE:
-	    String name = JavaNames.createValidJavaTypeName(f.getConfiguration().getLabel(), jp.name());
+	    String name = JavaNames.createValidJavaTypeName(f.getExternalId(), jp.name());
 	    try {
 		result = enumGenerator.generateEnum(f, name);
 		if (type.equals(PodioType.CATEGORY_MULTI)) {

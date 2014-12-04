@@ -25,8 +25,8 @@ public class JavaNames {
 	 * @return valid upper camel case java type name
 	 */
 	public static String createValidJavaTypeName(String name, String context) {
-		name = name.toLowerCase().replace(' ', '-').replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
-				.replace("ß", "ss");
+		name = name.toLowerCase().replace(' ', '-').replace("\u00E4", "ae").replace("\u00F6", "oe").replace("\00FC", "ue")
+			.replace("\u00DF", "ss");
 		name = name.replaceAll("[^-a-zA-Z01-9]", "");
 		name = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, name);
 
