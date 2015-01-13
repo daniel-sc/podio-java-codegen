@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>com.java-podio.code-gen</groupId>
+  <artifactId>code-gen</artifactId>
+  <version>0.0.2-SNAPSHOT</version>
+  <versioning>
+    <snapshot>
+      <timestamp>20150113.152554</timestamp>
+      <buildNumber>1</buildNumber>
+    </snapshot>
+    <lastUpdated>20150113152554</lastUpdated>
+    <snapshotVersions>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>0.0.2-20150113.152554-1</value>
+        <updated>20150113152554</updated>
+      </snapshotVersion>
+    </snapshotVersions>
+  </versioning>
+</metadata>
