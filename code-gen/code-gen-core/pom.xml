@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.java-podio.code-gen</groupId>
 		<artifactId>code-gen</artifactId>
-		<version>0.1.1-SNAPSHOT</version>
+		<version>0.1.1</version>
 	</parent>
 	<artifactId>code-gen-core</artifactId>
 	<description>Code generator - includes a main class for using as command line tool</description>
