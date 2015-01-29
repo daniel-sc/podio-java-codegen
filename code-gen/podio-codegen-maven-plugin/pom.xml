@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.java-podio.code-gen</groupId>
 		<artifactId>code-gen</artifactId>
-		<version>0.0.2-SNAPSHOT</version>
+		<version>0.1.0</version>
 	</parent>
 	<artifactId>podio-codegen-maven-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
