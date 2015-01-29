@@ -15,7 +15,7 @@
 
 	<properties>
 		<!--maven variable which points to your local repository -->
-		<internal.repo.path>file://C:\privat\Wechselfuchs\development\podio-java-codegen\mvn-repo</internal.repo.path>
+		<internal.repo.path>file://${project.basedir}/../mvn-repo</internal.repo.path>
 	</properties>
 
 	<repositories>
@@ -65,7 +65,7 @@
 			<dependency>
 				<groupId>com.podio</groupId>
 				<artifactId>api</artifactId>
-				<version>0.7.9-SNAPSHOT</version>
+				<version>0.7.9</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
