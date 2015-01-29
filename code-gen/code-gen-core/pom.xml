@@ -7,6 +7,12 @@
 	</parent>
 	<artifactId>code-gen-core</artifactId>
 	<description>Code generator - includes a main class for using as command line tool</description>
+
+    <properties>
+        <!--maven variable which points to your local repository -->
+        <internal.repo.path>file://${project.basedir}/../../mvn-repo</internal.repo.path>
+    </properties>
+
 	<build>
 		<plugins>
 			<plugin>
