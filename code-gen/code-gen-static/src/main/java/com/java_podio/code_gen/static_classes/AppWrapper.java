@@ -75,7 +75,7 @@ public abstract class AppWrapper implements Serializable {
     }
 
     /**
-     * Stores the original item, as retrieved by java-podio api.
+     * Stores the original item, as retrieved by java-podio api. This could be a {@link ItemOrItemBadge}.
      */
     public Item getOriginalItem() {
 	return originalItem;

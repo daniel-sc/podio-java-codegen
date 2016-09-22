@@ -21,7 +21,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.java_podio.code_gen.static_classes.AppWrapper;
-import com.podio.item.Item;
+import com.java_podio.code_gen.static_classes.ItemOrItemBadge;
 
 public class GenericPodioInterfaceProxyTest {
 
@@ -40,7 +40,7 @@ public class GenericPodioInterfaceProxyTest {
 
 	appObject1.setPodioRevision(10);
 	appObject1.setPodioId(1);
-	appObject1.setOriginalItem(new Item());
+	appObject1.setOriginalItem(new ItemOrItemBadge());
 	appObject1.getOriginalItem().setId(12123);
 	appObject2.setPodioRevision(20);
 	appObject2.setPodioId(2);

@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import javax.swing.JProgressBar;
 
 import com.java_podio.code_gen.static_classes.AppWrapper;
+import com.java_podio.code_gen.static_classes.ItemOrItemBadge;
 import com.podio.APIApplicationException;
 import com.podio.BaseAPI;
 import com.podio.file.FileAPI;
@@ -282,7 +283,7 @@ public abstract class GenericPodioImpl implements GenericPodioInterface {
 	    ItemsResponse response = getAPI(appId, ItemAPI.class).getItems(appId, amount, offset, null, null);
 	    total = response.getTotal();
 	    for (ItemBadge itemBadge : response.getItems()) {
-		Item item = PodioMapper.toItem(itemBadge);
+		ItemOrItemBadge item = PodioMapper.toItem(itemBadge);
 		result.add(newAppWrapper(type, item));
 	    }
 	    return result;

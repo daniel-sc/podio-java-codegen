@@ -2,7 +2,7 @@ package com.java_podio.code_gen.static_interface;
 
 import java.util.Map;
 
-import com.podio.item.Item;
+import com.java_podio.code_gen.static_classes.ItemOrItemBadge;
 import com.podio.item.ItemBadge;
 import com.podio.rating.RatingType;
 import com.podio.rating.RatingValuesMap;
@@ -10,15 +10,16 @@ import com.podio.rating.TypeRating;
 
 public class PodioMapper {
 
-    public static Item toItem(ItemBadge itemBadge) {
-	Item result = new Item();
+    public static ItemOrItemBadge toItem(ItemBadge itemBadge) {
+    	ItemOrItemBadge result = new ItemOrItemBadge();
 
 	result.setCurrentRevision(itemBadge.getCurrentRevision());
 	result.setExternalId(itemBadge.getExternalId());
 	result.setFields(itemBadge.getFields());
 	result.setId(itemBadge.getId());
 	result.setInitialRevision(itemBadge.getInitialRevision());
-	// itemBadge.getLink() - not part of Item.
+	result.setLink(itemBadge.getLink());
+	result.setFileCount(itemBadge.getFiles());
 	result.setRatings(toRatingValuesMap(itemBadge.getRatings()));
 	result.setTitle(itemBadge.getTitle());
 
