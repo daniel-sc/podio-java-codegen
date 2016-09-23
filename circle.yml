@@ -9,9 +9,7 @@ machine:
 dependencies:
   pre:
     - git clone https://github.com/daniel-sc/podio-java.git podio-java
-    - cd podio-java
-    - mvn clean install -Dmaven.test.skip=true
-    - cd ..
+    - mvn -f podio-java clean install -Dmaven.test.skip=true
 
 test:
   post:
