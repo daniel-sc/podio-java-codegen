@@ -1,5 +1,18 @@
 general:
   build_dir: code-gen
+
+machine:
+  java:
+    version: oraclejdk8
+
+# only needed when referencing a snapshot of podio-java!
+dependencies:
+  pre:
+    - git clone https://github.com/daniel-sc/podio-java.git podio-java
+    - cd podio-java
+    - mvn clean install -Dmaven.test.skip=true
+    - cd ..
+	
 test:
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
