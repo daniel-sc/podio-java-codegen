@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 import javax.swing.JProgressBar;
 
 import com.java_podio.code_gen.static_classes.AppWrapper;
+import com.podio.item.filter.ItemFilter;
 
 /**
  * This is a proxy/cache for podio objects. It immediately delegates all calls -
@@ -278,7 +279,15 @@ public abstract class GenericPodioInterfaceProxy {
 	    return changedItems;
 	}
 
-	public <T extends AppWrapper> List<T> getAllItems(Class<T> app) throws InterruptedException, ExecutionException {
+        @Override
+        public <T extends AppWrapper> List<T> filterAllItems(Class<T> app, ItemFilter filter) throws InterruptedException, ExecutionException {
+                LOGGER.info("Cacheing..");
+                List<T> result = original.filterAllItems(app, filter);
+                cacheItems(result);
+                return result;
+        }
+
+        public <T extends AppWrapper> List<T> getAllItems(Class<T> app) throws InterruptedException, ExecutionException {
 	    LOGGER.info("Cacheing..");
 	    List<T> result = original.getAllItems(app);
 	    cacheItems(result);

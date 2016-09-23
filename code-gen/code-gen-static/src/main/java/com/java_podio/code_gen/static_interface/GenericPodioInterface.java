@@ -1,15 +1,15 @@
 package com.java_podio.code_gen.static_interface;
 
+import com.java_podio.code_gen.static_classes.AppWrapper;
+import com.podio.item.ItemAPI;
+import com.podio.item.filter.ItemFilter;
+
+import javax.swing.*;
 import java.io.File;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
-import javax.swing.JProgressBar;
-
-import com.java_podio.code_gen.static_classes.AppWrapper;
-import com.podio.item.ItemAPI;
 
 /**
  * This is needed for {@link GenericPodioInterfaceProxy}.
@@ -22,25 +22,16 @@ public interface GenericPodioInterface {
      * @param filename
      * @return fileId
      */
-    public int uploadFile(File file, int appId, String filename);
+    int uploadFile(File file, int appId, String filename);
 
     /**
      * @param item
      *            podioId will be set for this object
      * @return podioId of the created item
      */
-    public int addItem(AppWrapper item);
+    int addItem(AppWrapper item);
 
-    public <T extends AppWrapper> T getItemById(Class<T> type, Integer podioId);
-
-    /**
-     * TODO: speed up by doing only one remote call!
-     * 
-     * @param type
-     * @param podioIds
-     * @return
-     */
-    public <T extends AppWrapper> List<T> getItemsById(Class<T> type, List<Integer> podioIds);
+    <T extends AppWrapper> T getItemById(Class<T> type, Integer podioId);
 
     /**
      * TODO: speed up by doing only one remote call!
@@ -49,7 +40,16 @@ public interface GenericPodioInterface {
      * @param podioIds
      * @return
      */
-    public <T extends AppWrapper> List<T> getItemsById(Class<T> type, List<Integer> podioIds, JProgressBar progressBar);
+     <T extends AppWrapper> List<T> getItemsById(Class<T> type, List<Integer> podioIds);
+
+    /**
+     * TODO: speed up by doing only one remote call!
+     * 
+     * @param type
+     * @param podioIds
+     * @return
+     */
+    <T extends AppWrapper> List<T> getItemsById(Class<T> type, List<Integer> podioIds, JProgressBar progressBar);
 
     /**
      * Updates item with all fields. Assumes {@link com.java_podio.code_gen.static_classes.AppWrapper#getPodioId()}
@@ -59,7 +59,7 @@ public interface GenericPodioInterface {
      * @return the updated item, this contains the new revision
      * @throws PodioConflictException
      */
-    public <T extends AppWrapper> T updateItem(T item) throws PodioConflictException;
+    <T extends AppWrapper> T updateItem(T item) throws PodioConflictException;
 
     /**
      * All items are assumed to be of the same type!
@@ -70,7 +70,7 @@ public interface GenericPodioInterface {
      * @throws ParseException
      * @throws PodioConflictException
      */
-    public <T extends AppWrapper> List<T> updateItems(List<T> items) throws ParseException, PodioConflictException;
+    <T extends AppWrapper> List<T> updateItems(List<T> items) throws ParseException, PodioConflictException;
 
     /**
      * All items are assumed to be of the same type!
@@ -82,7 +82,7 @@ public interface GenericPodioInterface {
      * @throws ParseException
      * @throws PodioConflictException
      */
-    public <T extends AppWrapper> List<T> updateItems(Collection<T> items, JProgressBar progressBar) throws ParseException,
+    <T extends AppWrapper> List<T> updateItems(Collection<T> items, JProgressBar progressBar) throws ParseException,
 	    PodioConflictException;
 
     /**
@@ -97,7 +97,9 @@ public interface GenericPodioInterface {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public <T extends AppWrapper> List<T> getAllItems(Class<T> app) throws InterruptedException, ExecutionException;
+    <T extends AppWrapper> List<T> getAllItems(Class<T> app) throws InterruptedException, ExecutionException;
+
+    <T extends AppWrapper> List<T> filterAllItems(Class<T> app, ItemFilter filter) throws InterruptedException, ExecutionException;
 
     /**
      * This directly queries the given app ({@code type} and field.
@@ -115,7 +117,7 @@ public interface GenericPodioInterface {
      *         {@code podioId} in field {@code fieldId}
      * @throws PodioApiWrapperException
      */
-    public <T extends AppWrapper> List<T> getAssociatedItems(Class<T> type, String fieldId, Integer podioId)
+    <T extends AppWrapper> List<T> getAssociatedItems(Class<T> type, String fieldId, Integer podioId)
 	    throws PodioApiWrapperException;
 
 }

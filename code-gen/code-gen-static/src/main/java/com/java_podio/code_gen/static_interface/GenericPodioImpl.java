@@ -1,42 +1,34 @@
 package com.java_podio.code_gen.static_interface;
 
+import com.java_podio.code_gen.static_classes.AppWrapper;
+import com.podio.APIApplicationException;
+import com.podio.BaseAPI;
+import com.podio.file.FileAPI;
+import com.podio.filter.FilterBy;
+import com.podio.filter.FilterByValue;
+import com.podio.item.*;
+import com.podio.item.filter.ItemFilter;
+
+import javax.swing.*;
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.swing.JProgressBar;
-
-import com.java_podio.code_gen.static_classes.AppWrapper;
-import com.java_podio.code_gen.static_classes.ItemOrItemBadge;
-import com.podio.APIApplicationException;
-import com.podio.BaseAPI;
-import com.podio.file.FileAPI;
-import com.podio.filter.FilterBy;
-import com.podio.filter.FilterByValue;
-import com.podio.item.Item;
-import com.podio.item.ItemAPI;
-import com.podio.item.ItemBadge;
-import com.podio.item.ItemCreate;
-import com.podio.item.ItemsResponse;
 
 /**
  * Generic interface methods for generated {@link AppWrapper} classes.
  */
 public abstract class GenericPodioImpl implements GenericPodioInterface {
 
-    private static final Logger LOGGER = Logger.getLogger(GenericPodioImpl.class.getName());
+        private static final Logger LOGGER = Logger.getLogger(GenericPodioImpl.class.getName());
+        public static final int DEFAULT_OFFSET = 500;
 
-    /**
+        /**
      * This is not thread safe! If used concurrently this needs to be changed to {@link ThreadLocal}!
      */
     public static SimpleDateFormat defaultDateFormatNoTime = new SimpleDateFormat("dd.MM.yyyy");
@@ -206,6 +198,58 @@ public abstract class GenericPodioImpl implements GenericPodioInterface {
 	return updatedItems;
     }
 
+    /**
+     *
+     * @param app
+     * @param filter attributes 'offset' and 'limit' are assumed not to be set (this method fetches _all_ filtered items!)
+     * @param <T>
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+	public <T extends AppWrapper> List<T> filterAllItems(Class<T> app, ItemFilter filter) throws InterruptedException, ExecutionException {
+		List<T> result = new ArrayList<T>();
+
+		ExecutorService executor = Executors.newCachedThreadPool();
+
+                filter.setLimit(DEFAULT_OFFSET);
+                filter.setOffset(0);
+                FilterItemsJob<T> firstResult = new FilterItemsJob<>(app, filter);
+		FutureTask<List<T>> firstTask = new FutureTask<>(firstResult);
+		executor.execute(firstTask);
+		do {
+			Thread.sleep(10);
+		} while (!firstTask.isDone());
+		int total = firstResult.getTotal();
+		result.addAll(firstTask.get());
+
+		List<FutureTask<List<T>>> tasks = new ArrayList<>();
+		for (int offset = DEFAULT_OFFSET; offset < total; offset += DEFAULT_OFFSET) {
+                        ItemFilter offsetFilter = new ItemFilter(filter);
+                        offsetFilter.setOffset(offset);
+			tasks.add(new FutureTask<>(new FilterItemsJob<>(app, offsetFilter)));
+		}
+
+		for (FutureTask<List<T>> task : tasks) {
+			executor.execute(task);
+		}
+		boolean finished;
+		do {
+			Thread.sleep(100);
+			finished = true;
+			for (FutureTask<List<T>> task : tasks) {
+				if (!task.isDone()) {
+					finished = false;
+
+				}
+			}
+		} while (!finished);
+		for (FutureTask<List<T>> task : tasks) {
+			result.addAll(task.get());
+		}
+		return result;
+	}
+
     /*
      * (non-Javadoc)
      * 
@@ -214,83 +258,78 @@ public abstract class GenericPodioImpl implements GenericPodioInterface {
      * #getAllItems(java.lang.Class)
      */
     public <T extends AppWrapper> List<T> getAllItems(Class<T> app) throws InterruptedException, ExecutionException {
-	List<T> result = new ArrayList<T>();
-
-	ExecutorService executor = Executors.newCachedThreadPool();
-
-	GetItems<T> firstResult = new GetItems<T>(0, app);
-	FutureTask<List<T>> firstTask = new FutureTask<List<T>>(firstResult);
-	executor.execute(firstTask);
-	do {
-	    Thread.sleep(10);
-	} while (!firstTask.isDone());
-	int total = firstResult.getTotal();
-	result.addAll(firstTask.get());
-
-	List<FutureTask<List<T>>> tasks = new ArrayList<FutureTask<List<T>>>();
-	for (int offset = 500; offset < total; offset += 500) {
-	    tasks.add(new FutureTask<List<T>>(new GetItems<T>(offset, app)));
-	}
-
-	for (FutureTask<List<T>> task : tasks) {
-	    executor.execute(task);
-	}
-	boolean finished;
-	do {
-	    Thread.sleep(100);
-	    finished = true;
-	    for (FutureTask<List<T>> task : tasks) {
-		if (!task.isDone()) {
-		    finished = false;
-
-		}
-	    }
-	} while (!finished);
-	for (FutureTask<List<T>> task : tasks) {
-	    result.addAll(task.get());
-	}
-	return result;
+		return filterAllItems(app, new ItemFilter()); // TODO validate same behavior as before!
     }
 
+        protected class FilterItemsJob<T extends AppWrapper> extends FetchItemsJob<T> {
+
+                private final ItemFilter filter;
+
+                public FilterItemsJob(Class<T> type, ItemFilter filter) {
+                        super(type);
+                        this.filter = filter;
+                }
+
+                public List<T> call() throws Exception {
+                        Integer appId = computeAppIdFromType();
+                        ItemsResponse response = getAPI(appId, ItemAPI.class).filterItems(appId, filter);
+                        return transformItemsResponse(response);
+                }
+
+        }
+
+    protected abstract class FetchItemsJob<T extends AppWrapper> implements Callable<List<T>> {
+            protected int total;
+            protected final Class<T> type;
+
+            protected FetchItemsJob(Class<T> type) {
+                    this.type = type;
+            }
+
+            protected List<T> transformItemsResponse(ItemsResponse response) throws PodioApiWrapperException {
+                    List<T> result = new ArrayList<T>();
+                    total = response.getFiltered();
+                    LOGGER.info("filtered: " + response.getFiltered() + " / total: " + response.getTotal());
+                    for (ItemBadge itemBadge : response.getItems()) {
+                            Item item = PodioMapper.toItem(itemBadge);
+                            result.add(newAppWrapper(type, item));
+                    }
+                    return result;
+            }
+
+            public Integer computeAppIdFromType() throws PodioApiWrapperException {
+                    Integer appId = newAppWrapper(type, null).getAppId();
+                    if (appId == null) {
+                            throw new IllegalStateException("Could not get App-Id for type=" + type);
+                    }
+                    return appId;
+            }
+
+            public int getTotal() {
+                    return total;
+            }
+    }
     /**
      * Job retrieving N (default: 500) items.
      * 
      * @param <T>
      */
-    protected class GetItems<T extends AppWrapper> implements Callable<List<T>> {
+    protected class GetItems<T extends AppWrapper> extends FetchItemsJob<T> {
 
+	private final FilterByValue<?>[] filters;
 	private int offset;
-	private int total;
-	private Class<T> type;
 	private int amount = 500;
 
-	public void setAmount(int amount) {
-	    this.amount = amount;
-	}
-
-	public GetItems(int offset, Class<T> type) {
-	    this.offset = offset;
-	    this.type = type;
+	public GetItems(int offset, Class<T> type, FilterByValue<?>... filters) {
+                super(type);
+                this.offset = offset;
+		this.filters = filters;
 	}
 
 	public List<T> call() throws Exception {
-	    List<T> result = new ArrayList<T>();
-
-	    Integer appId = newAppWrapper(type, null).getAppId();
-	    if (appId == null) {
-		throw new IllegalStateException("Could not get App-Id for type=" + type);
-	    }
-	    ItemsResponse response = getAPI(appId, ItemAPI.class).getItems(appId, amount, offset, null, null);
-	    total = response.getTotal();
-	    for (ItemBadge itemBadge : response.getItems()) {
-		ItemOrItemBadge item = PodioMapper.toItem(itemBadge);
-		result.add(newAppWrapper(type, item));
-	    }
-	    return result;
-	}
-
-	public int getTotal() {
-	    return total;
+            Integer appId = computeAppIdFromType();
+	    ItemsResponse response = getAPI(appId, ItemAPI.class).getItems(appId, amount, offset, null, null, filters);
+            return transformItemsResponse(response);
 	}
 
     }
