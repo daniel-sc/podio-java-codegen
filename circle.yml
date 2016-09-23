@@ -12,7 +12,7 @@ dependencies:
     - cd podio-java
     - mvn clean install -Dmaven.test.skip=true
     - cd ..
-	
+
 test:
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
