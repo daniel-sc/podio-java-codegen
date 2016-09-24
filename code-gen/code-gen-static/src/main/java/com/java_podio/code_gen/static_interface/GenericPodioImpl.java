@@ -206,8 +206,7 @@ public abstract class GenericPodioImpl implements GenericPodioInterface {
 
         @Override
         public Stream<ItemBadge> filterAllItemsStream(int appId, ItemFilter filter) {
-                Spliterator<ItemBadge> spliterator = new ItemFilterSpliterator(appId, filter, getAPI(appId, ItemAPI.class));
-                return StreamSupport.stream(spliterator, false);
+                return StreamSupport.stream(new ItemFilterSpliterator(appId, filter, getAPI(appId, ItemAPI.class)), true);
         }
 
         @Override

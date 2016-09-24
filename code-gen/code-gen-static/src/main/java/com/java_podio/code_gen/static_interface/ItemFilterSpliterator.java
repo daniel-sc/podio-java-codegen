@@ -4,34 +4,44 @@ import com.podio.item.ItemAPI;
 import com.podio.item.ItemBadge;
 import com.podio.item.filter.ItemFilter;
 
-import java.util.*;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
+import static com.java_podio.code_gen.static_interface.GenericPodioImpl.DEFAULT_OFFSET;
+
 class ItemFilterSpliterator extends Spliterators.AbstractSpliterator<ItemBadge> {
 
         private static final Logger LOGGER = Logger.getLogger(ItemFilterSpliterator.class.getName());
-
-        private List<ItemBadge> queue = Collections.synchronizedList(new LinkedList<>());
-        private AtomicInteger jobsStarted = new AtomicInteger(0);
-        private AtomicInteger jobsFinished = new AtomicInteger(0);
+        private final ConcurrentLinkedQueue<ItemBadge> queue = new ConcurrentLinkedQueue<>();
+        private final AtomicInteger jobsStarted = new AtomicInteger(0);
+        private final AtomicInteger jobsFinished = new AtomicInteger(0);
+        private final AtomicInteger splits = new AtomicInteger(0);
+        protected long est = Long.MAX_VALUE;
 
         public ItemFilterSpliterator(int appId, final ItemFilter filter, ItemAPI api) {
-                super(Long.MAX_VALUE, Spliterator.DISTINCT | Spliterator.NONNULL);
-                filter.setLimit(GenericPodioImpl.DEFAULT_OFFSET);
+                super(Long.MAX_VALUE, Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.IMMUTABLE);
+                filter.setLimit(DEFAULT_OFFSET);
                 filter.setOffset(0);
                 startJob();
-                // TODO propagate total to spliterator?
                 CompletableFuture.supplyAsync(() -> api.filterItems(appId, filter))
                         .thenAccept(r -> {
+                                est = r.getFiltered();
                                 queue.addAll(r.getItems());
-                                for (int offset = GenericPodioImpl.DEFAULT_OFFSET; offset < r.getFiltered(); offset += GenericPodioImpl.DEFAULT_OFFSET) {
+                                for (int offset = DEFAULT_OFFSET; offset < r.getFiltered(); offset += DEFAULT_OFFSET) {
                                         ItemFilter offsetFilter = new ItemFilter(filter);
                                         offsetFilter.setOffset(offset);
                                         startJob();
-                                        CompletableFuture.supplyAsync(() -> api.filterItems(appId, offsetFilter))
+                                        /* use separate threads for providing values - otherwise deadlocks can occur
+                                        as all threads are employed with waiting for values! */
+                                        Executor service = Executors.newCachedThreadPool();
+                                        CompletableFuture.supplyAsync(() -> api.filterItems(appId, offsetFilter), service)
                                                 .thenAccept(result -> queue.addAll(result.getItems()))
                                                 .thenAccept(r2 -> jobFinished());
                                 }
@@ -41,27 +51,71 @@ class ItemFilterSpliterator extends Spliterators.AbstractSpliterator<ItemBadge> 
 
         private void startJob() {
                 int no = jobsStarted.incrementAndGet();
-                LOGGER.info("Started filter job  #" + no);
+                LOGGER.info("Started fetch job  #" + no);
         }
 
         private void jobFinished() {
                 int no = jobsFinished.incrementAndGet();
-                LOGGER.info("Finished filter job #" + no);
+                LOGGER.info("Finished fetch job #" + no);
+        }
+
+        @Override
+        public long estimateSize() {
+                return est / (splits.get() + 1);
+        }
+
+        @Override
+        public Spliterator<ItemBadge> trySplit() {
+                int currentSplits = splits.get();
+                if (currentSplits >= maxSplits()) {
+                        return null;
+                }
+                boolean increased = splits.compareAndSet(currentSplits, currentSplits + 1);
+                if (!increased) {
+                        return trySplit();
+                }
+                LOGGER.info("created split #" + (currentSplits + 1));
+                return new Spliterator<ItemBadge>() {
+                        @Override
+                        public boolean tryAdvance(Consumer<? super ItemBadge> action) {
+                                return ItemFilterSpliterator.this.tryAdvance(action);
+                        }
+
+                        @Override
+                        public Spliterator<ItemBadge> trySplit() {
+                                return ItemFilterSpliterator.this.trySplit();
+                        }
+
+                        @Override
+                        public long estimateSize() {
+                                return ItemFilterSpliterator.this.estimateSize();
+                        }
+
+                        @Override
+                        public int characteristics() {
+                                return ItemFilterSpliterator.this.characteristics();
+                        }
+                };
+        }
+
+        protected int maxSplits() {
+                return 10;
         }
 
         @Override
         public boolean tryAdvance(Consumer<? super ItemBadge> action) {
-                while (queue.isEmpty() && !(jobsStarted.get() == jobsFinished.get())) {
+                ItemBadge element;
+                while ((element = queue.poll()) == null && !(jobsStarted.get() == jobsFinished.get())) {
                         try {
                                 Thread.sleep(10);
                         } catch (InterruptedException e) {
                                 throw new IllegalStateException("Failed to wait for first task!", e);
                         }
                 }
-                if (queue.isEmpty()) {
+                if (element == null) {
                         return false;
                 } else {
-                        action.accept(queue.remove(0));
+                        action.accept(element);
                         return true;
                 }
         }
