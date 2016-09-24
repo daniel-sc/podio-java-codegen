@@ -2,6 +2,7 @@ package com.java_podio.code_gen.static_interface;
 
 import com.java_podio.code_gen.static_classes.AppWrapper;
 import com.podio.item.ItemAPI;
+import com.podio.item.ItemBadge;
 import com.podio.item.filter.ItemFilter;
 
 import javax.swing.*;
@@ -10,6 +11,7 @@ import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 /**
  * This is needed for {@link GenericPodioInterfaceProxy}.
@@ -100,6 +102,12 @@ public interface GenericPodioInterface {
     <T extends AppWrapper> List<T> getAllItems(Class<T> app) throws InterruptedException, ExecutionException;
 
     <T extends AppWrapper> List<T> filterAllItems(Class<T> app, ItemFilter filter) throws InterruptedException, ExecutionException;
+
+        Stream<ItemBadge> filterAllItemsStream(int appId, ItemFilter filter);
+
+        <T extends AppWrapper> Stream<T> filterAllItemsAppWrapperStream(Class<T> app, ItemFilter filter, boolean fetchCompleteItems);
+
+        <T extends AppWrapper> List<T> filterAllItems(Class<T> app, ItemFilter filter, boolean fetchCompleteItem);
 
     /**
      * This directly queries the given app ({@code type} and field.

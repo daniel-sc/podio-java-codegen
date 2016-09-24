@@ -38,7 +38,7 @@ import com.sun.codemodel.JVar;
  */
 public class AppGenerator {
 
-    private static final String FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC = "Field is of unsupportet type and is not parsed, hence always {@code null}!";
+    private static final String FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC = "Field is of unsupported type and is not parsed, hence always {@code null}!";
 
     protected JCodeModel jCodeModel;
 
@@ -100,6 +100,7 @@ public class AppGenerator {
 	jc = jp._class(className)._extends(AppWrapper.class);
 	
 	jc.field(JMod.STATIC | JMod.FINAL, jCodeModel.LONG, "serialVersionUID", JExpr.lit(1));
+        jc.field(JMod.STATIC | JMod.FINAL | JMod.PUBLIC, jCodeModel.INT, "APP_ID", JExpr.lit(app.getId()));
 	
 	_setValue = null;
 	_setValue = _setValue();
@@ -119,8 +120,6 @@ public class AppGenerator {
 		._return(
 			JExpr.lit(app.getConfiguration().getExternalId() == null ? "" : app.getConfiguration()
 				.getExternalId()));
-
-	// TODO add field ids (id/externalId)?
 
 	// Default constructor:
 	jc.constructor(JMod.PUBLIC);
@@ -142,6 +141,11 @@ public class AppGenerator {
 	    JClass javaType = getType(type, f);
 	    JMember field = CodeGenerator.addMember(jc, name, javaType, javadoc, jCodeModel,
 		    com.podio.app.ApplicationFieldStatus.DELETED.equals(f.getStatus()));
+
+            // add constant with field id:
+            jc.field(JMod.STATIC | JMod.FINAL | JMod.PUBLIC, jCodeModel.INT,
+                    "FIELD_ID_" + CaseFormat.UPPER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, name),
+                    JExpr.lit(f.getId()));
 
 	    // add setValuesFromItem part:
 	    JCase jcase = setValuesFromItemSwitch._case(JExpr.lit(f.getId()));

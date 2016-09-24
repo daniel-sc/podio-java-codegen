@@ -19,10 +19,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 import javax.swing.JProgressBar;
 
 import com.java_podio.code_gen.static_classes.AppWrapper;
+import com.podio.item.ItemBadge;
 import com.podio.item.filter.ItemFilter;
 
 /**
@@ -40,11 +42,7 @@ public abstract class GenericPodioInterfaceProxy {
     /**
      * AppType -> (PodioId -> AppTypeObject)
      */
-    private static Map<Class<? extends AppWrapper>, Map<Integer, AppWrapper>> cache = new HashMap<Class<? extends AppWrapper>, Map<Integer, AppWrapper>>();
-
-    static {
-	cache = Collections.synchronizedMap(cache);
-    }
+    private static final Map<Class<? extends AppWrapper>, Map<Integer, AppWrapper>> cache = Collections.synchronizedMap(new HashMap<>());
 
     /**
      * @param type
@@ -55,7 +53,7 @@ public abstract class GenericPodioInterfaceProxy {
     @SuppressWarnings("unchecked")
     protected static <T extends AppWrapper> T getCachedItem(Class<T> type, Integer podioId) {
 	if (!cache.containsKey(type))
-	    cache.put(type, Collections.synchronizedMap(new HashMap<Integer, AppWrapper>()));
+	    cache.put(type, Collections.synchronizedMap(new HashMap<>()));
 	if (podioId == null)
 	    return null;
 	return (T) cache.get(type).get(podioId);
@@ -90,15 +88,13 @@ public abstract class GenericPodioInterfaceProxy {
      */
     protected static <T extends AppWrapper> void cacheItem(Class<T> type, AppWrapper item) {
 	if (!cache.containsKey(type))
-	    cache.put(type, Collections.synchronizedMap(new HashMap<Integer, AppWrapper>()));
+	    cache.put(type, Collections.synchronizedMap(new HashMap<>()));
 	if (item.getPodioId() == null)
 	    throw new IllegalArgumentException("Cannot cache item without podio id!");
 
 	try {
 	    cache.get(type).put(item.getPodioId(), copyItem(item));
-	} catch (ClassNotFoundException e) {
-	    LOGGER.log(Level.SEVERE, "could not (de-)serialize item!", e);
-	} catch (IOException e) {
+	} catch (ClassNotFoundException | IOException e) {
 	    LOGGER.log(Level.SEVERE, "could not (de-)serialize item!", e);
 	}
     }
@@ -231,8 +227,8 @@ public abstract class GenericPodioInterfaceProxy {
 	}
 
 	public <T extends AppWrapper> List<T> updateItems(List<T> items) throws ParseException, PodioConflictException {
-	    List<T> unchangedItems = new ArrayList<T>();
-	    List<T> changedItems = new ArrayList<T>();
+	    List<T> unchangedItems = new ArrayList<>();
+	    List<T> changedItems = new ArrayList<>();
 	    for (T item : items) {
 		if (!isCached(item))
 		    changedItems.add(item);
@@ -252,7 +248,7 @@ public abstract class GenericPodioInterfaceProxy {
 	public <T extends AppWrapper> T updateItem(T item) throws PodioConflictException {
 	    if (isCached(item)) {
 		LOGGER.info("saved update call for PodioId: " + item.getPodioId());
-		return (T) item;
+		return item;
 	    }
 	    T updatedItem = original.updateItem(item);
 	    cacheItem(updatedItem.getClass(), updatedItem);
@@ -261,8 +257,8 @@ public abstract class GenericPodioInterfaceProxy {
 
 	public <T extends AppWrapper> List<T> updateItems(Collection<T> items, JProgressBar progressBar)
 		throws ParseException, PodioConflictException {
-	    List<T> unchangedItems = new ArrayList<T>();
-	    List<T> changedItems = new ArrayList<T>();
+	    List<T> unchangedItems = new ArrayList<>();
+	    List<T> changedItems = new ArrayList<>();
 	    for (T item : items) {
 		if (!isCached(item))
 		    changedItems.add(item);
@@ -287,7 +283,34 @@ public abstract class GenericPodioInterfaceProxy {
                 return result;
         }
 
-        public <T extends AppWrapper> List<T> getAllItems(Class<T> app) throws InterruptedException, ExecutionException {
+            @Override
+            public Stream<ItemBadge> filterAllItemsStream(int appId, ItemFilter filter) {
+                    LOGGER.info("Not Cacheing!");
+                    return original.filterAllItemsStream(appId, filter);
+            }
+
+            @Override
+            public <T extends AppWrapper> Stream<T> filterAllItemsAppWrapperStream(Class<T> app, ItemFilter filter, boolean fetchCompleteItems) {
+                    return cacheStream(original.filterAllItemsAppWrapperStream(app, filter, fetchCompleteItems));
+            }
+
+            private <T extends AppWrapper> Stream<T> cacheStream(Stream<T> tStream) {
+                    LOGGER.info("caching stream..");
+                    return tStream.map(appWrapper -> {
+                            cacheItem(appWrapper.getClass(), appWrapper);
+                        return appWrapper;
+                    });
+            }
+
+            @Override
+            public <T extends AppWrapper> List<T> filterAllItems(Class<T> app, ItemFilter filter, boolean fetchCompleteItem) {
+                    LOGGER.info("Cacheing..");
+                    List<T> result = original.filterAllItems(app, filter, fetchCompleteItem);
+                    cacheItems(result);
+                    return result;
+            }
+
+            public <T extends AppWrapper> List<T> getAllItems(Class<T> app) throws InterruptedException, ExecutionException {
 	    LOGGER.info("Cacheing..");
 	    List<T> result = original.getAllItems(app);
 	    cacheItems(result);
