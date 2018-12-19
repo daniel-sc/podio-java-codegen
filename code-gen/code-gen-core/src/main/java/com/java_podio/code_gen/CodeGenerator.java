@@ -1,25 +1,17 @@
 package com.java_podio.code_gen;
 
-import java.util.List;
-
 import com.google.common.base.CaseFormat;
 import com.podio.app.Application;
 import com.podio.app.ApplicationField;
 import com.podio.app.CategoryOption;
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClassAlreadyExistsException;
-import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JConditional;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JFieldVar;
-import com.sun.codemodel.JMethod;
-import com.sun.codemodel.JMod;
-import com.sun.codemodel.JPackage;
-import com.sun.codemodel.JType;
-import com.sun.codemodel.JVar;
+import com.sun.codemodel.*;
+
+import java.util.List;
+import java.util.logging.Logger;
 
 public class CodeGenerator {
+
+        private static final Logger LOGGER = Logger.getLogger(CodeGenerator.class.getName());
 
 	final JCodeModel jCodeModel;
 
@@ -120,39 +112,39 @@ public class CodeGenerator {
 	}
 
 	public static void printApp(Application app) {
-		System.out.println("AppId=" + app.getId());
-		System.out.println("AppExternalId=" + app.getConfiguration().getExternalId());
-		System.out.println("AppName=" + app.getConfiguration().getName());
-		System.out.println("AppItemName=" + app.getConfiguration().getItemName());
-		System.out.println("FIELDS:");
+		LOGGER.info("AppId=" + app.getId());
+		LOGGER.info("AppExternalId=" + app.getConfiguration().getExternalId());
+		LOGGER.info("AppName=" + app.getConfiguration().getName());
+		LOGGER.info("AppItemName=" + app.getConfiguration().getItemName());
+		LOGGER.info("FIELDS:");
 		for (ApplicationField appField : app.getFields()) {
 			printAppField(appField);
-			System.out.println();
+			LOGGER.info("--");
 		}
 	}
 
 	public static void printAppField(ApplicationField appField) {
-		System.out.println("FieldId=" + appField.getId());
-		System.out.println("FieldExternalId=" + appField.getExternalId());
-		System.out.println("FieldDescription=" + appField.getConfiguration().getDescription());
-		System.out.println("FieldLabel=" + appField.getConfiguration().getLabel());
-		System.out.println("FieldIsRequired=" + appField.getConfiguration().isRequired());
+		LOGGER.info("FieldId=" + appField.getId());
+		LOGGER.info("FieldExternalId=" + appField.getExternalId());
+		LOGGER.info("FieldDescription=" + appField.getConfiguration().getDescription());
+		LOGGER.info("FieldLabel=" + appField.getConfiguration().getLabel());
+		LOGGER.info("FieldIsRequired=" + appField.getConfiguration().isRequired());
 		if (appField.getConfiguration().getSettings() != null) {
-			System.out.println("FieldAllowedValues=" + appField.getConfiguration().getSettings().getAllowedValues());
-			System.out.println("FieldAllowedCurrencies="
+			LOGGER.info("FieldAllowedValues=" + appField.getConfiguration().getSettings().getAllowedValues());
+			LOGGER.info("FieldAllowedCurrencies="
 					+ appField.getConfiguration().getSettings().getAllowedCurrencies());
-			System.out.println("FieldMultiple=" + appField.getConfiguration().getSettings().getMultiple());
-			System.out.println("FieldReferenceableTypes="
+			LOGGER.info("FieldMultiple=" + appField.getConfiguration().getSettings().getMultiple());
+			LOGGER.info("FieldReferenceableTypes="
 					+ appField.getConfiguration().getSettings().getReferenceableTypes());
 			if (appField.getConfiguration().getSettings().getOptions() != null) {
 				for (CategoryOption option : appField.getConfiguration().getSettings().getOptions()) {
-					System.out.println("FieldOption: " + option.getId() + ", " + option.getText() + ", "
+					LOGGER.info("FieldOption: " + option.getId() + ", " + option.getText() + ", "
 							+ option.getStatus());
 				}
 			}
-			System.out.println("FieldTextFieldSize=" + appField.getConfiguration().getSettings().getSize());
+			LOGGER.info("FieldTextFieldSize=" + appField.getConfiguration().getSettings().getSize());
 		}
-		System.out.println("FieldType=" + appField.getType().toString());
+		LOGGER.info("FieldType=" + appField.getType().toString());
 
 	}
 

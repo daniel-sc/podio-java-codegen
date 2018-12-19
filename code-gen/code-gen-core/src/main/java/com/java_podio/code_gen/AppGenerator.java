@@ -1,8 +1,5 @@
 package com.java_podio.code_gen;
 
-import java.text.ParseException;
-import java.util.List;
-
 import com.google.common.base.CaseFormat;
 import com.java_podio.code_gen.static_classes.AppWrapper;
 import com.java_podio.code_gen.static_classes.PodioCurrency;
@@ -11,27 +8,13 @@ import com.podio.app.Application;
 import com.podio.app.ApplicationField;
 import com.podio.contact.Profile;
 import com.podio.embed.Embed;
-import com.podio.item.FieldValuesUpdate;
-import com.podio.item.FieldValuesView;
-import com.podio.item.Item;
-import com.podio.item.ItemCreate;
-import com.podio.item.ItemUpdate;
-import com.sun.codemodel.JCase;
-import com.sun.codemodel.JClass;
-import com.sun.codemodel.JClassAlreadyExistsException;
-import com.sun.codemodel.JCodeModel;
-import com.sun.codemodel.JConditional;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JDocComment;
-import com.sun.codemodel.JExpr;
-import com.sun.codemodel.JExpression;
-import com.sun.codemodel.JForEach;
-import com.sun.codemodel.JMethod;
-import com.sun.codemodel.JMod;
-import com.sun.codemodel.JOp;
-import com.sun.codemodel.JPackage;
-import com.sun.codemodel.JSwitch;
-import com.sun.codemodel.JVar;
+import com.podio.item.*;
+import com.sun.codemodel.*;
+
+import java.text.ParseException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Generates a java wrapper for a given podio app.
@@ -39,8 +22,10 @@ import com.sun.codemodel.JVar;
 public class AppGenerator {
 
     private static final String FIELD_IS_OF_UNSUPPORTET_TYPE_JAVADOC = "Field is of unsupported type and is not parsed, hence always {@code null}!";
+    private static final Logger LOGGER = Logger.getLogger(AppGenerator.class.getName());
 
-    protected JCodeModel jCodeModel;
+
+        protected JCodeModel jCodeModel;
 
     /**
      * Constructor - constructing an object from an {@link Item}.
@@ -249,8 +234,7 @@ public class AppGenerator {
 		    result = jCodeModel.ref(List.class).narrow(result);
 		}
 	    } catch (JClassAlreadyExistsException e) {
-		System.out.println("ERROR: could not generate enum with name: " + name + "(might exist twice?!)");
-		e.printStackTrace();
+		LOGGER.log(Level.SEVERE, "ERROR: could not generate enum with name: " + name + "(might exist twice?!)", e);
 		result = jCodeModel.ref(Integer.class);
 	    }
 	    break;
@@ -370,7 +354,7 @@ public class AppGenerator {
 	    return JExpr.invoke("parseFieldJson").arg(jVar).arg(JExpr.dotclass(jCodeModel.ref(Embed.class))).arg("embed");
 	    
 	default:
-	    System.out.println("WARNING: could not create getFieldValueExpression for type: " + type);
+	    LOGGER.warning("could not create getFieldValueExpression for type: " + type);
 	    return JExpr._null();
 	}
     }

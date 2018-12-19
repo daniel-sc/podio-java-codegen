@@ -1,36 +1,25 @@
 package com.java_podio.code_gen.static_interface;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import com.java_podio.code_gen.static_classes.AppWrapper;
+import com.podio.item.ItemBadge;
+import com.podio.item.filter.ItemFilter;
+
+import javax.swing.*;
+import java.io.*;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import javax.swing.JProgressBar;
-
-import com.java_podio.code_gen.static_classes.AppWrapper;
-import com.podio.item.ItemBadge;
-import com.podio.item.filter.ItemFilter;
-
 /**
  * This is a proxy/cache for podio objects. It immediately delegates all calls -
  * except unnecessary updates are suppressed.<br>
- * 
+ *
  * <b>Note:</b> any methods of subclasses of {@link GenericPodioImpl} that
  * directly use {@link GenericPodioImpl#getAPI(Integer, Class)} bypass the
  * caching!
@@ -62,7 +51,7 @@ public abstract class GenericPodioInterfaceProxy {
     /**
      * Returns the cached item that is equal with respect to
      * {@code item.getPodioId()}, or {@code null}.
-     * 
+     *
      * @param item
      * @return
      */
@@ -116,7 +105,7 @@ public abstract class GenericPodioInterfaceProxy {
     }
 
     public static void printCache() {
-	System.out.println("Cache: " + cache);
+            LOGGER.fine("Cache: " + cache);
     }
 
     /**

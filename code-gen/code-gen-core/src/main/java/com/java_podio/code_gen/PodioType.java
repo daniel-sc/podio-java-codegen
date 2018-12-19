@@ -3,9 +3,11 @@ package com.java_podio.code_gen;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.java_podio.code_gen.static_classes.PodioCurrency;
 import com.java_podio.code_gen.static_classes.PodioDate;
+import com.java_podio.code_gen.static_interface.GenericPodioInterfaceProxy;
 import com.podio.app.ApplicationField;
 import com.podio.app.ApplicationFieldType;
 
@@ -40,6 +42,8 @@ public enum PodioType {
 
     /** used for links */
     EMBED(List.class);
+
+    private static final Logger LOGGER = Logger.getLogger(PodioType.class.getName());
 
     private final Class<? extends Object> javaType;
 
@@ -93,7 +97,7 @@ public enum PodioType {
 		return podioType;
 	    }
 	}
-	System.out.println("Warning: cannot determine type of field: " + f.getType() + "("
+	LOGGER.warning("cannot determine type of field: " + f.getType() + "("
 		+ f.getConfiguration().getLabel() + ", " + f.getStatus() + ")");
 	return UNDEFINED;
     }
