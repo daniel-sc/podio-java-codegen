@@ -127,3 +127,9 @@ local.properties
 *.war
 *.ear
 /.project
+/target
+/.settings
+/.classpath
+/.project
+/build
+

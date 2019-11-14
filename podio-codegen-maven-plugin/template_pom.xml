@@ -1,0 +1,64 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>YOUR_GROUP_ID</groupId>
+	<artifactId>YOUR_ARTIFACT_ID</artifactId>
+	<version>YOUR_VERSION</version>
+	<properties>
+		<codegen.version>0.0.1</codegen.version>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.java-podio.code-gen</groupId>
+				<artifactId>podio-codegen-maven-plugin</artifactId>
+				<version>${codegen.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<user>YOUR_PODIO_USERNAME</user>
+							<password>YOUR_PODIO_PASSWORD</password>
+							<spaceId>YOUR_SPACE_ID</spaceId>
+							<basePackage>your.package_name</basePackage>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.java-podio.code-gen</groupId>
+			<artifactId>code-gen-static</artifactId>
+			<version>${codegen.version}</version>
+		</dependency>
+	</dependencies>
+
+<pluginRepositories>
+<pluginRepository>
+<id>podio-java-codegen-repo</id>
+  <url>https://raw.github.com/daniel-sc/podio-java-codegen/master/mvn-repo</url>
+  <!-- use snapshot version -->
+  <snapshots>
+     <enabled>true</enabled>
+      <updatePolicy>always</updatePolicy>
+   </snapshots>
+</pluginRepository>
+</pluginRepositories>
+
+<repositories>
+<repository>
+<id>podio-java-codegen-repo</id>
+  <url>https://raw.github.com/daniel-sc/podio-java-codegen/master/mvn-repo</url>
+  <!-- use snapshot version -->
+  <snapshots>
+     <enabled>true</enabled>
+      <updatePolicy>always</updatePolicy>
+   </snapshots>
+</repository>
+</repositories>
+
+</project>
