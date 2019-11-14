@@ -22,6 +22,14 @@
 		</repository>
 	</repositories>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub daniel-sc/podio-java-codegen Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/daniel-sc/podio-java-codegen</url>
+        </repository>
+    </distributionManagement>
+
 	<scm>
 		<developerConnection>scm:git:git@github.com:daniel-sc/podio-java-codegen.git</developerConnection>
 	  <tag>HEAD</tag>
