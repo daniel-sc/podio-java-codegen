@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.java-podio.code-gen</groupId>
 	<artifactId>code-gen</artifactId>
-	<version>0.2.1</version>
+	<version>0.2.2-SNAPSHOT</version>
 	<name>Podio code generator for Java</name>
 	<description>Generates Java wrapper classes for a given app. This is also usable as a maven plugin.</description>
 
@@ -32,7 +32,7 @@
 
 	<scm>
 		<developerConnection>scm:git:git@github.com:daniel-sc/podio-java-codegen.git</developerConnection>
-	  <tag>code-gen-0.2.1</tag>
+	  <tag>HEAD</tag>
   </scm>
 
 	<build>
