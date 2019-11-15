@@ -38,8 +38,8 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>com.podio</groupId>
-			<artifactId>api</artifactId>
+			<groupId>com.podio.community</groupId>
+			<artifactId>podio-api</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.codemodel</groupId>

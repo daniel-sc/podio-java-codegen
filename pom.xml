@@ -20,6 +20,11 @@
             <url>http://download.java.net/maven/2/</url>
             <layout>default</layout>
         </repository>
+        <repository>
+            <id>github</id>
+            <name>GitHub daniel-sc Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/daniel-sc/podio-java</url>
+        </repository>
     </repositories>
 
     <distributionManagement>
@@ -76,9 +81,9 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.podio</groupId>
-                <artifactId>api</artifactId>
-                <version>0.7.10-SNAPSHOT</version> <!-- TODO -->
+                <groupId>com.podio.community</groupId>
+                <artifactId>podio-api</artifactId>
+                <version>0.7.11</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
