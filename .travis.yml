@@ -7,4 +7,3 @@ before_install:
   - cd podio-java
   - mvn clean install -Dmaven.test.skip=true
   - cd ..
-  - cd code-gen

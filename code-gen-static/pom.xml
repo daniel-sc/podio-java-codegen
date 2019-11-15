@@ -8,11 +8,6 @@
 	<artifactId>code-gen-static</artifactId>
 	<description>Contains non-generated classes on which generated classes depend.</description>
 
-    <properties>
-        <!--maven variable which points to your local repository -->
-        <internal.repo.path>file://${project.basedir}/../../mvn-repo</internal.repo.path>
-    </properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>com.podio</groupId>
