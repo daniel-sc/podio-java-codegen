@@ -4,6 +4,7 @@
     <artifactId>code-gen-pom</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
+    <name>Podio Java Code Generator</name>
     <description>Generates Java wrapper classes for a given app. This is also usable as a maven plugin.</description>
     <url>http://github.com:daniel-sc/podio-java-codegen.git</url>
 

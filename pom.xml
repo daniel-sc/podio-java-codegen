@@ -7,8 +7,6 @@
         <relativePath>code-gen-pom</relativePath>
     </parent>
     <artifactId>code-gen</artifactId>
-    <name>Podio code generator for Java</name>
-    <description>Generates Java wrapper classes for a given app. This is also usable as a maven plugin.</description>
 
     <packaging>pom</packaging>
     <modules>
