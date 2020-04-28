@@ -1,8 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-    <groupId>com.java-podio.code-gen</groupId>
+	<parent>
+		<groupId>com.java-podio.code-gen</groupId>
+		<artifactId>code-gen-pom</artifactId>
+		<version>0.2.3-SNAPSHOT</version>
+		<relativePath>../code-gen-pom</relativePath>
+	</parent>
 	<artifactId>code-gen-core</artifactId>
-    <version>0.2.3-SNAPSHOT</version>
     <description>Code generator - includes a main class for using as command line tool</description>
 
 	<build>
@@ -37,7 +41,6 @@
 		<dependency>
 			<groupId>com.github.podio-community</groupId>
 			<artifactId>podio-api-client</artifactId>
-			<version>1.0.0-beta.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.codemodel</groupId>
@@ -53,7 +56,6 @@
 		<dependency>
 			<groupId>com.java-podio.code-gen</groupId>
 			<artifactId>code-gen-static</artifactId>
-			<version>0.2.3-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>
