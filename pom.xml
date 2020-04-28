@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.java-podio.code-gen</groupId>
+    <groupId>com.github.daniel-sc.podio-java-codegen</groupId>
     <artifactId>code-gen</artifactId>
     <version>0.2.3-SNAPSHOT</version>
     <name>Podio code generator for Java</name>
@@ -20,20 +20,7 @@
             <url>http://download.java.net/maven/2/</url>
             <layout>default</layout>
         </repository>
-        <repository>
-            <id>github</id>
-            <name>GitHub daniel-sc Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/daniel-sc/podio-java</url>
-        </repository>
     </repositories>
-
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub daniel-sc/podio-java-codegen Apache Maven Packages</name>
-            <url>https://maven.pkg.github.com/daniel-sc/podio-java-codegen</url>
-        </repository>
-    </distributionManagement>
 
     <scm>
         <developerConnection>scm:git:git@github.com:daniel-sc/podio-java-codegen.git</developerConnection>
