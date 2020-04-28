@@ -1,10 +1,22 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.daniel-sc.podio-java-codegen</groupId>
     <artifactId>code-gen-pom</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
+    <description>Generates Java wrapper classes for a given app. This is also usable as a maven plugin.</description>
+    <url>http://github.com:daniel-sc/podio-java-codegen.git</url>
+
     <packaging>pom</packaging>
+
+    <developers>
+        <developer>
+            <id>daniel-sc</id>
+            <name>Daniel Schreiber</name>
+            <email>daniel-schreiber@gmx.de</email>
+        </developer>
+    </developers>
 
     <dependencyManagement>
         <dependencies>
@@ -125,5 +137,12 @@
             </build>
         </profile>
     </profiles>
+
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>http://creativecommons.org/licenses/MIT/</url>
+        </license>
+    </licenses>
 
 </project>
