@@ -10,7 +10,7 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>com.java-podio.code-gen</groupId>
+				<groupId>com.github.daniel-sc.podio-java-codegen</groupId>
 				<artifactId>podio-codegen-maven-plugin</artifactId>
 				<version>${codegen.version}</version>
 				<executions>
@@ -31,7 +31,7 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>com.java-podio.code-gen</groupId>
+			<groupId>com.github.daniel-sc.podio-java-codegen</groupId>
 			<artifactId>code-gen-static</artifactId>
 			<version>${codegen.version}</version>
 		</dependency>

@@ -1,20 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.java-podio.code-gen</groupId>
+    <groupId>com.github.daniel-sc.podio-java-codegen</groupId>
     <artifactId>code-gen-pom</artifactId>
-    <version>1.0.0-beta.2</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.java-podio.code-gen</groupId>
+                <groupId>com.github.daniel-sc.podio-java-codegen</groupId>
                 <artifactId>code-gen-static</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.java-podio.code-gen</groupId>
+                <groupId>com.github.daniel-sc.podio-java-codegen</groupId>
                 <artifactId>code-gen-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -30,7 +30,7 @@
         <connection>scm:git:git://github.com:daniel-sc/podio-java-codegen.git</connection>
         <developerConnection>scm:git:git@github.com:daniel-sc/podio-java-codegen.git</developerConnection>
         <url>http://github.com:daniel-sc/podio-java-codegen.git</url>
-        <tag>code-gen-1.0.0-beta.2</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <build>
