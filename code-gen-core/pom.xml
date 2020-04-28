@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.github.daniel-sc.podio-java-codegen</groupId>
 		<artifactId>code-gen-pom</artifactId>
-		<version>1.0.0-beta.3</version>
+		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>../code-gen-pom</relativePath>
 	</parent>
 	<artifactId>code-gen-core</artifactId>
