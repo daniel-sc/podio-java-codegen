@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.java-podio.code-gen</groupId>
 		<artifactId>code-gen-pom</artifactId>
-		<version>0.2.3-SNAPSHOT</version>
+		<version>1.0.0-beta.2</version>
 		<relativePath>../code-gen-pom</relativePath>
 	</parent>
 	<artifactId>code-gen-core</artifactId>
