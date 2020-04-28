@@ -1,23 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>com.java-podio.code-gen</groupId>
-		<artifactId>code-gen</artifactId>
-		<version>0.2.3-SNAPSHOT</version>
-	</parent>
+	<groupId>com.java-podio.code-gen</groupId>
 	<artifactId>podio-codegen-maven-plugin</artifactId>
+	<version>0.2.3-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!--maven variable which points to your local repository -->
-        <internal.repo.path>file://${project.basedir}/../../mvn-repo</internal.repo.path>
 	</properties>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.java-podio.code-gen</groupId>
 			<artifactId>code-gen-core</artifactId>
+			<version>0.2.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -30,8 +26,6 @@
 			<version>3.2</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- <dependency> <groupId>org.codehaus.plexus</groupId> <artifactId>plexus-utils</artifactId> 
-			<version>3.0.8</version> </dependency> -->
 	</dependencies>
 
 	<build>
