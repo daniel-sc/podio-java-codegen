@@ -10,8 +10,8 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.podio.community</groupId>
-			<artifactId>podio-api</artifactId>
+			<groupId>com.github.podio-community</groupId>
+			<artifactId>podio-api-client</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
