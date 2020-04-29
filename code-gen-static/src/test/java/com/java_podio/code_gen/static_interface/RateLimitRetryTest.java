@@ -19,6 +19,8 @@ import org.mockito.stubbing.Answer;
 import com.java_podio.code_gen.static_interface.RateLimitRetry.RetriesFailedException;
 import com.podio.APIApplicationException;
 
+import javax.ws.rs.core.Response;
+
 public class RateLimitRetryTest {
 
     private static final Logger LOGGER = Logger.getLogger(RateLimitRetryTest.class.getName());
@@ -35,7 +37,7 @@ public class RateLimitRetryTest {
     public void testProxifyNoSuccess() throws IOException {
 	Mockito.when(genericInterface.uploadFile(Mockito.any(File.class), Mockito.anyInt(), Mockito.anyString()))
 		.thenThrow(
-			new APIApplicationException(null, "rate_limit",
+			new APIApplicationException(Response.Status.TOO_MANY_REQUESTS, "rate_limit",
 				"You have hit the rate limit. Please wait 2 seconds before trying again", null));
 
 	GenericPodioInterface rateLimitProxy = RateLimitRetry.proxify(genericInterface, GenericPodioInterface.class);
@@ -58,7 +60,7 @@ public class RateLimitRetryTest {
 
 		    public Integer answer(InvocationOnMock invocation) throws Throwable {
 			if (count++ == 0) {
-			    throw new APIApplicationException(null, "rate_limit",
+			    throw new APIApplicationException(Response.Status.TOO_MANY_REQUESTS, "rate_limit",
 				    "You have hit the rate limit. Please wait 2 seconds before trying again", null);
 			} else {
 			    return 6;

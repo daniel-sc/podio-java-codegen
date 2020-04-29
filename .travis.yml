@@ -6,10 +6,3 @@ matrix:
       dist: trusty
     - jdk: openjdk11
       dist: bionic
-
-before_install:
-  # only needed when referencing a snapshot of podio-java!
-  - git clone https://github.com/daniel-sc/podio-java.git podio-java
-  - cd podio-java
-  - mvn clean install -Dmaven.test.skip=true
-  - cd ..

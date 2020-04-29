@@ -52,10 +52,14 @@
 			<artifactId>guava</artifactId>
 			<version>14.0.1</version>
 		</dependency>
-
 		<dependency>
 			<groupId>com.github.daniel-sc.podio-java-codegen</groupId>
 			<artifactId>code-gen-static</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

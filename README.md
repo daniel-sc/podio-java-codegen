@@ -1,5 +1,8 @@
-podio-java-codegen [![Build Status](https://travis-ci.org/daniel-sc/podio-java-codegen.png)](https://travis-ci.org/daniel-sc/podio-java-codegen)
+podio-java-codegen 
 ==================
+
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.daniel-sc.podio-java-codegen/code-gen-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.daniel-sc.podio-java-codegen/code-gen-core)
+[![Build Status](https://travis-ci.org/daniel-sc/podio-java-codegen.png)](https://travis-ci.org/daniel-sc/podio-java-codegen)
 
 Tool, that automatically creates Java (wrapper) classes for any given Podio app. Any class includes corresponding from/to Item mappers.
 This can easily be used as a maven plugin.
