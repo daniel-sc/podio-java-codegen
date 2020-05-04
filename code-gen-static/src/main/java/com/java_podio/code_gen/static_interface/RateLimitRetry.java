@@ -1,5 +1,9 @@
 package com.java_podio.code_gen.static_interface;
 
+import com.podio.APIApplicationException;
+
+import javax.net.ssl.SSLProtocolException;
+import javax.ws.rs.ProcessingException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -10,8 +14,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.podio.APIApplicationException;
 
 public abstract class RateLimitRetry {
 
@@ -25,25 +27,22 @@ public abstract class RateLimitRetry {
 	    super(message, cause);
 	}
 
-	public RetriesFailedException(String message) {
-	    super(message);
-	}
-
     }
 
     private static class RateLimitInvokationHandler<T extends GenericPodioInterface> implements InvocationHandler {
 
 	private final T original;
+	private final boolean retrySslError;
 
-	public RateLimitInvokationHandler(T original, Class<T> interfaceType) {
+            public RateLimitInvokationHandler(T original, Class<T> interfaceType, boolean retrySslError) {
 	    this.original = original;
+	    this.retrySslError = retrySslError;
 	}
 
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-	    for (int i = 0; i <= NUMBER_OF_RETRIES; i++) {
+	    for (int i = 0; true; i++) {
 		try {
-		    Object result = method.invoke(original, args);
-		    return result;
+		     return method.invoke(original, args);
 		} catch (InvocationTargetException e) {
 		    if (i == NUMBER_OF_RETRIES) {
 			LOGGER.warning("giving up after " + NUMBER_OF_RETRIES + " retries.");
@@ -63,25 +62,27 @@ public abstract class RateLimitRetry {
 			    Thread.sleep(secondsInt * 1000);
 			    LOGGER.info("waking up, trying again..");
 			} else {
-			    LOGGER.warning("could not parse wait time from: " + exc.getDescription()
-				    + " (throwing exception)");
+			    LOGGER.warning("could not parse wait time from: " + exc.getDescription() + " (throwing exception)");
 			    throw e;
 			}
-		    } else {
+		    } else if (retrySslError && e.getTargetException() instanceof ProcessingException
+                            && (e.getTargetException().getCause() instanceof SSLProtocolException
+                            || (e.getTargetException().getCause().getCause() instanceof SSLProtocolException))) {
+                            LOGGER.info("Retrying SSL error in 10ms: " + e.getMessage());
+                            Thread.sleep(10);
+                    } else {
 			LOGGER.log(Level.INFO, "non rate limit exception occured..", e);
 			throw e;
 		    }
 		}
 	    }
-	    LOGGER.severe("this should never happen!");
-	    throw new RetriesFailedException("giving up after " + NUMBER_OF_RETRIES + " retries. (invalid code path!)");
 	}
     }
 
     public static interface RateLimitHitListener {
 	/**
 	 * Should return fast!
-	 * 
+	 *
 	 * @param retry
 	 *            0 to {@link RateLimitRetry#NUMBER_OF_RETRIES} - 1
 	 * @param waitSeconds
@@ -105,17 +106,21 @@ public abstract class RateLimitRetry {
      * @param original
      * @param interfaceType
      *            must be interface!
-     * @return
+     * @param retrySslError if <code>true</code> ssl errors will as well be retried
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <T extends GenericPodioInterface> T proxify(T original, Class<T> interfaceType) {
+    public static <T extends GenericPodioInterface> T proxify(T original, Class<T> interfaceType, boolean retrySslError) {
 	LOGGER.info("Using GenericPodioInterfaceProxy on " + original.getClass().getCanonicalName());
 	/*
 	 * The proxy is necessary, since otherwise all functionality added by
 	 * subclasses of GenericPodioImpl would be hidden!
 	 */
 	return (T) Proxy.newProxyInstance(interfaceType.getClassLoader(), new Class[] { interfaceType },
-		new RateLimitInvokationHandler(original, interfaceType));
+		new RateLimitInvokationHandler(original, interfaceType, retrySslError));
+    }
+
+    public static <T extends GenericPodioInterface> T proxify(T original, Class<T> interfaceType) {
+	return proxify(original, interfaceType, false);
     }
 
 }
