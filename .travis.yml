@@ -2,7 +2,5 @@ language: java
 
 matrix:
   include:
-    - jdk: oraclejdk8
-      dist: trusty
     - jdk: openjdk11
       dist: bionic
