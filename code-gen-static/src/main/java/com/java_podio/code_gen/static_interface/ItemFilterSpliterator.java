@@ -27,14 +27,18 @@ class ItemFilterSpliterator extends Spliterators.AbstractSpliterator<ItemBadge> 
 
         public ItemFilterSpliterator(int appId, final ItemFilter filter, ItemAPI api) {
                 super(Long.MAX_VALUE, Spliterator.DISTINCT | Spliterator.NONNULL | Spliterator.IMMUTABLE);
-                filter.setLimit(DEFAULT_OFFSET);
+                Integer originalLimit = filter.getLimit();
+                if (filter.getLimit() == null || filter.getLimit() > DEFAULT_OFFSET) {
+                        filter.setLimit(DEFAULT_OFFSET);
+                }
                 filter.setOffset(0);
                 startJob();
                 CompletableFuture.supplyAsync(() -> api.filterItems(appId, filter))
                         .thenAccept(r -> {
-                                est = r.getFiltered();
+                                int actualLimit = originalLimit != null ? Math.min(originalLimit, r.getFiltered()) : r.getFiltered();
+                                est = actualLimit;
                                 queue.addAll(r.getItems());
-                                for (int offset = DEFAULT_OFFSET; offset < r.getFiltered(); offset += DEFAULT_OFFSET) {
+                                for (int offset = DEFAULT_OFFSET; offset < actualLimit; offset += DEFAULT_OFFSET) {
                                         ItemFilter offsetFilter = new ItemFilter(filter);
                                         offsetFilter.setOffset(offset);
                                         startJob();
