@@ -6,11 +6,10 @@ import com.podio.item.filter.ItemFilter;
 
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -20,6 +19,7 @@ class ItemFilterSpliterator extends Spliterators.AbstractSpliterator<ItemBadge> 
 
         private static final Logger LOGGER = Logger.getLogger(ItemFilterSpliterator.class.getName());
         private final ConcurrentLinkedQueue<ItemBadge> queue = new ConcurrentLinkedQueue<>();
+        private final AtomicReference<RuntimeException> exception = new AtomicReference<>(null);
         private final AtomicInteger jobsStarted = new AtomicInteger(0);
         private final AtomicInteger jobsFinished = new AtomicInteger(0);
         private final AtomicInteger splits = new AtomicInteger(0);
@@ -47,8 +47,16 @@ class ItemFilterSpliterator extends Spliterators.AbstractSpliterator<ItemBadge> 
                                         Executor service = Executors.newCachedThreadPool();
                                         CompletableFuture.supplyAsync(() -> api.filterItems(appId, offsetFilter), service)
                                                 .thenAccept(result -> queue.addAll(result.getItems()))
+                                                .exceptionally(e -> {
+                                                        exception.set(e instanceof RuntimeException ? ((RuntimeException) e) : new IllegalStateException(e));
+                                                        return null;
+                                                })
                                                 .thenAccept(r2 -> jobFinished());
                                 }
+                        })
+                        .exceptionally(e -> {
+                                exception.set(e instanceof RuntimeException ? ((RuntimeException) e) : new IllegalStateException(e));
+                                return null;
                         })
                         .thenAccept(r3 -> jobFinished());
         }
@@ -109,12 +117,12 @@ class ItemFilterSpliterator extends Spliterators.AbstractSpliterator<ItemBadge> 
         @Override
         public boolean tryAdvance(Consumer<? super ItemBadge> action) {
                 ItemBadge element;
-                while ((element = queue.poll()) == null && !(jobsStarted.get() == jobsFinished.get())) {
-                        try {
-                                Thread.sleep(10);
-                        } catch (InterruptedException e) {
-                                throw new IllegalStateException("Failed to wait for first task!", e);
-                        }
+                while ((element = queue.poll()) == null && exception.get() == null && !(jobsStarted.get() == jobsFinished.get())) {
+                        LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(1));
+                }
+                if (exception.get() != null) {
+                        LOGGER.info("rethrowing exception: " + exception.get());
+                        throw exception.get();
                 }
                 if (element == null) {
                         return false;
