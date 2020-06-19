@@ -13,8 +13,10 @@ import javax.swing.*;
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -214,10 +216,13 @@ public abstract class GenericPodioImpl implements GenericPodioInterface {
                 try {
                         Integer appId = newAppWrapper(app, null).getAppId();
                         Stream<T> appWrapperStream = filterAllItemsStream(appId, filter)
-                                .map(PodioMapper::toItem).map(item -> newAppWrapperNoException(app, item));
+                                .map(PodioMapper::toItem)
+                                .map(item -> newAppWrapperNoException(app, item));
                         if(fetchCompleteItems) {
+                                LOGGER.info("fetching item details..");
+                                ItemAPI api = getAPI(appId, ItemAPI.class);
                                 appWrapperStream = appWrapperStream.parallel()
-                                        .map(appWrapper -> getAPI(appId, ItemAPI.class).getItem(appWrapper.getPodioId()))
+                                        .map(appWrapper -> api.getItem(appWrapper.getPodioId()))
                                         .map(item -> newAppWrapperNoException(app, item));
                         }
                         return  appWrapperStream;
@@ -265,7 +270,7 @@ public abstract class GenericPodioImpl implements GenericPodioInterface {
 		new FilterByValue<>(new FilterBy<Integer>() {
 
 		    public String getKey() {
-			return fieldId; // TODO check: "kunde" ?
+			return fieldId;
 		    }
 
 		    public String format(Integer value) {

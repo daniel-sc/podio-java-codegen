@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.ConnectException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -67,7 +68,9 @@ public abstract class RateLimitRetry {
 			}
 		    } else if (retrySslError && e.getTargetException() instanceof ProcessingException
                             && (e.getTargetException().getCause() instanceof SSLProtocolException
-                            || (e.getTargetException().getCause().getCause() instanceof SSLProtocolException))) {
+                            || e.getTargetException().getCause() instanceof ConnectException
+                            || (e.getTargetException().getCause().getCause() instanceof SSLProtocolException)
+                            || (e.getTargetException().getCause().getCause() instanceof ConnectException))) {
                             LOGGER.info("Retrying SSL error in 10ms: " + e.getMessage());
                             Thread.sleep(10);
                     } else {
